@@ -1,0 +1,34 @@
+/* Include standard C library headers */
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/time.h>
+
+/* Include CUDA runtime library headers */
+#include <cuda_runtime.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Include builtin types and operators */
+#include "whirl2c.h"
+
+/* Types */
+/* File-level variables and routines */
+__inline float get_time_diff(const struct timeval *, const struct timeval *);
+
+extern void randomInitArr(float *, unsigned int);
+
+extern void computeGold(float *, const float *, const float *, unsigned int, unsigned int, unsigned int);
+
+extern void compare_matrices(float *, float *, unsigned int);
+
+__global__ void matrixMul(float *, float *, float *);
+
+#ifdef __cplusplus
+}
+#endif
+
+/* File-level CUDA variables */
+extern __shared__ unsigned int smem[];
+

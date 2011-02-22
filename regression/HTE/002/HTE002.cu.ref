@@ -1,0 +1,107 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 10:21:10 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTE002.cu.h"
+
+
+__global__ void k_example(
+  float * g_arr)
+{
+  int i;
+  int j;
+  int i_init;
+  int i_end;
+  int i_step;
+  int tripcount;
+  int tblk_stride;
+  int j_init;
+  int j_end;
+  int j_step;
+  
+  tripcount = 1024U;
+  tblk_stride = ((tripcount + -1) / (int)(8U)) + (int)(1U);
+  i_init = tblk_stride * (int)((blockIdx).x);
+  i_end = (i_init + tblk_stride) + -1;
+  i_step = 1U;
+  for(i = i_init; i <= i_end; i = i + i_step)
+  {
+    foo(g_arr, i);
+  }
+  j_init = (int)(1023U) - ((int)((threadIdx).z) + ((int)((blockIdx).x) * (int)(2U)));
+  j_end = 0U;
+  j_step = -16LL;
+  for(j = j_init; j >= j_end; j = j + j_step)
+  {
+    bar(g_arr, j);
+  }
+} /* k_example */
+
+
+__device__ void bar(
+  float * g_b,
+  int end)
+{
+  int k;
+  int k_init;
+  int k_end;
+  int k_step;
+  
+  k_init = (threadIdx).y;
+  k_end = end + -1;
+  k_step = 3;
+  for(k = k_init; k <= k_end; k = k + k_step)
+  {
+    g_b[k] = g_b[k] - g_b[end];
+  }
+  return;
+} /* bar */
+
+
+__device__ void foo(
+  float * g_a,
+  int start)
+{
+  int p;
+  int p_init;
+  int p_end;
+  int p_step;
+  
+  p_init = start + (int)((threadIdx).z);
+  p_end = 1023U;
+  p_step = 2;
+  for(p = p_init; p <= p_end; p = p + p_step)
+  {
+    bar(g_a, p);
+  }
+  return;
+} /* foo */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int reg1;
+  float arr[1024LL];
+  float * g_arr;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  cudaMalloc((void **) & g_arr, 4096U);
+  stride = 1U;
+  batsz = stride * (int)(4096U);
+  cudaMemcpy(g_arr, arr, batsz, cudaMemcpyHostToDevice);
+  (dimGrid).x = 8U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 32;
+  (dimBlock).y = 3U;
+  (dimBlock).z = 2U;
+  k_example <<< dimGrid, dimBlock >>>(g_arr);
+  return reg1;
+} /* main */
+

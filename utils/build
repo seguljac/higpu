@@ -1,0 +1,136 @@
+#!/bin/bash
+#
+# Build the hiCUDA compiler.
+#
+# The script does not take any parameters.
+#
+# Last updated: 10/05/25
+#
+
+# internal flags
+DEBUG=1             # debugged version of hiCUDA compiler
+COMPILE_LIBS=0      # with open64 libs
+
+##########################################################################
+
+# Get the directory that contains this script.
+cd `dirname $0`
+SCRIPT_DIR=`pwd`
+
+##########################################################################
+# Check prerequisites.
+##########################################################################
+
+# Linux OS
+OS_NAME=`uname -s`
+if [[ "${OS_NAME}" != "Linux" ]]; then
+    echo
+    echo "*** The OS does not appear to be Linux! Abort."
+    echo
+    exit 1
+fi
+
+# Check the version of GCC.
+GCC_VERSION=`gcc -v 2>&1 | awk '/gcc version/ {printf $3}'`
+if [[ "${GCC_VERSION:0:3}" != "4.1" ]]; then
+    # Try to find GCC 4.1.
+    GCC_4_1=`which gcc-4.1`
+    if [[ $? -eq 0 ]]; then
+        # Create links to GCC 4.1 in <gcc> under the script directory.
+        GPP_4_1=`which g++-4.1`
+        CPP_4_1=`which cpp-4.1`
+        mkdir gcc
+        ln -sf ${GCC_4_1} gcc/gcc
+        ln -sf ${GPP_4_1} gcc/g++
+        ln -sf ${CPP_4_1} gcc/cpp
+        # Add the <gcc> sub-directory to PATH.
+        export PATH="${SCRIPT_DIR}/gcc:${PATH}"
+    else
+        # GCC 4.1 is not installed. Abort.
+        echo
+        echo "*** GCC ${GCC_VERSION} cannot be used to build" \
+             "the hiCUDA compiler! Abort."
+        echo "*** Please install GCC 4.1 (see README)."
+        echo
+        exit 1
+    fi
+fi
+
+# GNU make
+MAKE="gmake"
+if [[ ! `type -p ${MAKE}` ]]; then
+    MAKE="make"
+    if [[ ! `type -p ${MAKE}` ]]; then
+        echo
+        echo "*** GNU Make does not exist! Please install it."
+        echo
+        exit 1
+    fi
+fi
+
+# flex and bison
+if [[ ! `type -p flex` ]]; then
+    echo
+    echo "*** FLEX does not exist! Please install it."
+    echo
+    exit 1
+fi
+if [[ ! `type -p bison` ]]; then
+    echo
+    echo "*** BISON does not exist! Please install it."
+    echo
+    exit 1
+fi
+
+# csh or tcsh
+if [[ ! `type -p csh` && ! `type -p tcsh` ]]; then
+    echo
+    echo "*** CSH (or TCSH) does not exist! Please install it."
+    echo
+    exit 1
+fi
+
+##########################################################################
+# Build the hiCUDA compiler.
+##########################################################################
+
+SRC_DIR="${SCRIPT_DIR}/../src"
+cd ${SRC_DIR}
+
+# Set the debug option.
+DEBUG_FLAG=""
+if [[ ${DEBUG} -ne 0 ]]; then
+    DEBUG_FLAG="BUILD_OPTIMIZE=DEBUG"
+fi
+
+# Invoke the makefile.
+${MAKE} SHELL=/bin/bash ${DEBUG_FLAG} all
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+# Build the libs.
+if [[ ${COMPILE_LIBS} -ne 0 ]]; then
+    ${MAKE} SHELL=/bin/bash ${DEBUG_FLAG} library
+    if [[ $? -ne 0 ]]; then
+        exit 1
+    fi
+fi
+
+echo
+echo "===================================================================="
+echo "          Successfully built the hiCUDA compiler"
+echo "===================================================================="
+echo
+
+##########################################################################
+# Clean up.
+##########################################################################
+
+# Remove <SCRIPT_DIR>/gcc (used to override gcc in the default path).
+if [[ -d "${SCRIPT_DIR}/gcc" ]]; then
+    rm -rf ${SCRIPT_DIR}/gcc
+fi
+
+exit 0
+

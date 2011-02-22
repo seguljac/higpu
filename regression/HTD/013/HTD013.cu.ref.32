@@ -1,0 +1,249 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 18 15:58:07 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD013.cu.h"
+
+
+__global__ void d_test(
+  int * g_a_incr,
+  float * g_a_arr)
+{
+  int i;
+  int j;
+  
+  i = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(32U));
+  for(j = 0U; j <= (int)(99U); j = j + (int)(1U))
+  {
+    switch(g_a_incr[i])
+    {
+    case 0 :
+      goto _4;
+    case 1 :
+      goto _6;
+    case 2 :
+      goto _7;
+    case 3 :
+      goto _8;
+    case 4 :
+      goto _9;
+    case 5 :
+      goto _10;
+    case 6 :
+      goto _11;
+    case 7 :
+      goto _12;
+    case 8 :
+      goto _13;
+    case 9 :
+      goto _14;
+    case 10 :
+      goto _15;
+    case 11 :
+      goto _16;
+    case 12 :
+      goto _17;
+    case 13 :
+      goto _18;
+    case 14 :
+      goto _19;
+    case 15 :
+      goto _20;
+    case 16 :
+      goto _21;
+    case 17 :
+      goto _22;
+    case 18 :
+      goto _23;
+    case 19 :
+      goto _24;
+    case 20 :
+      goto _25;
+    case 21 :
+      goto _26;
+    case 22 :
+      goto _27;
+    case 23 :
+      goto _28;
+    case 24 :
+      goto _29;
+    case 25 :
+      goto _30;
+    case 26 :
+      goto _31;
+    case 27 :
+      goto _32;
+    case 28 :
+      goto _33;
+    case 29 :
+      goto _34;
+    case 30 :
+      goto _35;
+    case 31 :
+      goto _36;
+    default :
+      goto _37;
+    }
+    _4 :;
+    g_a_arr[i] = g_a_arr[i] + 0.0F;
+    goto _5;
+    _6 :;
+    g_a_arr[i] = g_a_arr[i] + 1.0F;
+    goto _5;
+    _7 :;
+    g_a_arr[i] = g_a_arr[i] + 2.0F;
+    goto _5;
+    _8 :;
+    g_a_arr[i] = g_a_arr[i] + 3.0F;
+    goto _5;
+    _9 :;
+    g_a_arr[i] = g_a_arr[i] + 4.0F;
+    goto _5;
+    _10 :;
+    g_a_arr[i] = g_a_arr[i] + 5.0F;
+    goto _5;
+    _11 :;
+    g_a_arr[i] = g_a_arr[i] + 6.0F;
+    goto _5;
+    _12 :;
+    g_a_arr[i] = g_a_arr[i] + 7.0F;
+    goto _5;
+    _13 :;
+    g_a_arr[i] = g_a_arr[i] + 8.0F;
+    goto _5;
+    _14 :;
+    g_a_arr[i] = g_a_arr[i] + 9.0F;
+    goto _5;
+    _15 :;
+    g_a_arr[i] = g_a_arr[i] + 1.0e+01F;
+    goto _5;
+    _16 :;
+    g_a_arr[i] = g_a_arr[i] + 1.1e+01F;
+    goto _5;
+    _17 :;
+    g_a_arr[i] = g_a_arr[i] + 1.2e+01F;
+    goto _5;
+    _18 :;
+    g_a_arr[i] = g_a_arr[i] + 1.3e+01F;
+    goto _5;
+    _19 :;
+    g_a_arr[i] = g_a_arr[i] + 1.4e+01F;
+    goto _5;
+    _20 :;
+    g_a_arr[i] = g_a_arr[i] + 1.5e+01F;
+    goto _5;
+    _21 :;
+    g_a_arr[i] = g_a_arr[i] + 1.6e+01F;
+    goto _5;
+    _22 :;
+    g_a_arr[i] = g_a_arr[i] + 1.7e+01F;
+    goto _5;
+    _23 :;
+    g_a_arr[i] = g_a_arr[i] + 1.8e+01F;
+    goto _5;
+    _24 :;
+    g_a_arr[i] = g_a_arr[i] + 1.9e+01F;
+    goto _5;
+    _25 :;
+    g_a_arr[i] = g_a_arr[i] + 2.0e+01F;
+    goto _5;
+    _26 :;
+    g_a_arr[i] = g_a_arr[i] + 2.1e+01F;
+    goto _5;
+    _27 :;
+    g_a_arr[i] = g_a_arr[i] + 2.2e+01F;
+    goto _5;
+    _28 :;
+    g_a_arr[i] = g_a_arr[i] + 2.3e+01F;
+    goto _5;
+    _29 :;
+    g_a_arr[i] = g_a_arr[i] + 2.4e+01F;
+    goto _5;
+    _30 :;
+    g_a_arr[i] = g_a_arr[i] + 2.5e+01F;
+    goto _5;
+    _31 :;
+    g_a_arr[i] = g_a_arr[i] + 2.6e+01F;
+    goto _5;
+    _32 :;
+    g_a_arr[i] = g_a_arr[i] + 2.7e+01F;
+    goto _5;
+    _33 :;
+    g_a_arr[i] = g_a_arr[i] + 2.8e+01F;
+    goto _5;
+    _34 :;
+    g_a_arr[i] = g_a_arr[i] + 2.9e+01F;
+    goto _5;
+    _35 :;
+    g_a_arr[i] = g_a_arr[i] + 3.0e+01F;
+    goto _5;
+    _36 :;
+    g_a_arr[i] = g_a_arr[i] + 3.1e+01F;
+    goto _5;
+    _37 :;
+    goto _5;
+    _5 :;
+  }
+} /* d_test */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register unsigned int __comma;
+  register unsigned int __comma0;
+  float * arr;
+  float init_val;
+  int * incr;
+  int i;
+  int(*a_incr)[32LL];
+  float(*a_arr)[32LL];
+  int * g_a_incr;
+  int stride;
+  int batsz;
+  float * g_a_arr;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  __comma = (unsigned int) malloc(128U);
+  incr = (int *) __comma;
+  __comma0 = (unsigned int) malloc(128U);
+  arr = (float *) __comma0;
+  a_incr = (int(*)[32LL])(incr);
+  a_arr = (float(*)[32LL])(arr);
+  init_val = (float)(argc) + 1.0F;
+  for(i = 0U; i < (int)(32U); i = i + (int)(1U))
+  {
+    (*a_incr)[i] = i % (int)(32U);
+    (*a_arr)[i] = init_val;
+  }
+  cudaMalloc((void **) & g_a_incr, 128U);
+  stride = 1U;
+  batsz = stride * (int)(128U);
+  cudaMemcpy(g_a_incr, a_incr, batsz, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_a_arr, 128U);
+  cudaMemset(g_a_arr, 0U, 128U);
+  (dimGrid).x = 1U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 32U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  d_test <<< dimGrid, dimBlock >>>(g_a_incr, g_a_arr);
+  stride = 1U;
+  batsz = stride * (int)(128U);
+  cudaMemcpy(a_arr, g_a_arr, batsz, cudaMemcpyDeviceToHost);
+  cudaFree(g_a_incr);
+  cudaFree(g_a_arr);
+  printf("\n");
+  for(i = 0U; i <= (int)(31U); i = i + (int)(1U))
+  {
+    printf("%10.2f\n", (double)((*a_arr)[i]));
+  }
+  printf("\n");
+  free(a_arr);
+  return 0U;
+} /* main */
+

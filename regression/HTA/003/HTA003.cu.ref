@@ -1,0 +1,63 @@
+/*******************************************************
+ * CUDA file generated at Sun Nov  7 09:54:06 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTA003.cu.h"
+
+
+__global__ void k_test(
+  int * g_a_A)
+{
+  int i;
+  int j;
+  
+  g_a_A[1U] = 0U;
+  i = (blockIdx).x;
+  j = (int)((threadIdx).x) + (int)(1U);
+  if(j <= (int)(6U))
+  {
+    g_a_A[(j + (i * (int)(6U))) + -1] = g_a_A[(j + (i * (int)(6U))) + -1] + (int)(1U);
+  }
+} /* k_test */
+
+
+int main(
+  int argv,
+  char ** argc)
+{
+  int * A;
+  int(*a_A)[8LL][7LL];
+  int * g_a_A;
+  int stride;
+  int batsz;
+  int iv_0;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  a_A = (int(*)[8LL][7LL])(A);
+  cudaMalloc((void **) & g_a_A, 192U);
+  stride = 1U;
+  batsz = stride * (int)(12U);
+  for(iv_0 = 0U; iv_0 <= (int)(3U); iv_0 = iv_0 + (int)(1U))
+  {
+    cudaMemcpy(g_a_A + ((stride * iv_0) * (int)(6U)), (void *)((unsigned char *)(a_A) + ((stride * ((iv_0 * (int)(7U)) + (int)(1U))) * (int)(4U))), batsz, cudaMemcpyHostToDevice);
+  }
+  (dimGrid).x = 8U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 7U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_test <<< dimGrid, dimBlock >>>(g_a_A);
+  stride = 1U;
+  batsz = stride * (int)(12U);
+  for(iv_0 = 4U; iv_0 <= (int)(8U); iv_0 = iv_0 + (int)(1U))
+  {
+    cudaMemcpy((void *)((unsigned char *)(a_A) + ((stride * ((iv_0 * (int)(7U)) + (int)(4U))) * (int)(4U))), g_a_A + (stride * ((iv_0 * (int)(6U)) + (int)(3U))), batsz, cudaMemcpyDeviceToHost);
+  }
+  cudaFree(g_a_A);
+  printf("%d\n", (*a_A)[0U][0U]);
+  return 0U;
+} /* main */
+

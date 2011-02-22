@@ -1,0 +1,91 @@
+/*******************************************************
+ * CUDA file generated at Thu Jun 10 21:28:48 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTC001.cu.h"
+
+
+__global__ void k_name(
+  float * g_E)
+{
+  float * c_A;
+  float * c_B;
+  
+  c_A = (float *)(&cmem);
+  c_B = ((float *)(&cmem) + 128LL);
+  kernel_callee(g_E);
+  g_E[0U] = c_A[1U] + c_B[2U];
+  kernel_callee(g_E);
+} /* k_name */
+
+
+__device__ void kernel_callee(
+  float * g_E0)
+{
+  float * s_E;
+  int gcs_ofst;
+  int scs_ofst;
+  int n_segs_per_cs;
+  int n_segs;
+  int warp_id;
+  int id_within_warp;
+  int iv_0;
+  int seg_id_in_cs;
+  int g_cs_ofst;
+  int s_cs_ofst;
+  int thr_ofst;
+  
+  s_E = (float *)(&smem);
+  gcs_ofst = 0;
+  scs_ofst = 0;
+  n_segs_per_cs = 4;
+  n_segs = n_segs_per_cs;
+  warp_id = (int)((threadIdx).x) / 16;
+  id_within_warp = (int)((threadIdx).x) % 16;
+  for(iv_0 = warp_id; n_segs > iv_0; iv_0 = iv_0 + 2)
+  {
+    seg_id_in_cs = iv_0 % n_segs_per_cs;
+    g_cs_ofst = gcs_ofst;
+    s_cs_ofst = scs_ofst;
+    thr_ofst = id_within_warp + (seg_id_in_cs * 16);
+    s_E[s_cs_ofst + thr_ofst] = g_E0[g_cs_ofst + thr_ofst];
+  }
+  return;
+} /* kernel_callee */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  float A[128LL];
+  float B[128LL];
+  float E[8LL][8LL];
+  float * g_E;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  cudaMalloc((void **) & g_E, 256U);
+  stride = 8U;
+  batsz = stride * (int)(32U);
+  cudaMemcpy(g_E, E, batsz, cudaMemcpyHostToDevice);
+  stride = 1U;
+  batsz = stride * (int)(512U);
+  cudaMemcpyToSymbol("cmem", A, batsz, 0U, cudaMemcpyHostToDevice);
+  stride = 1U;
+  batsz = stride * (int)(512U);
+  cudaMemcpyToSymbol("cmem", B, batsz, 512U, cudaMemcpyHostToDevice);
+  (dimGrid).x = 2U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 32U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_name <<< dimGrid, dimBlock, 256 >>>(g_E);
+  cudaFree(g_E);
+  return 0U;
+} /* main */
+

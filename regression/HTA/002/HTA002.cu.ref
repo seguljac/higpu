@@ -1,0 +1,72 @@
+/*******************************************************
+ * CUDA file generated at Sun Nov  7 09:51:47 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTA002.cu.h"
+
+
+__global__ void k_test(
+  int * g_A)
+{
+  int i;
+  int j;
+  
+  g_A[1U] = 0U;
+  i = (blockIdx).x;
+  j = (int)((threadIdx).x) + (int)(1U);
+  if(j <= (int)(6U))
+  {
+    g_A[(j + (i * (int)(6U))) + -1] = g_A[(j + (i * (int)(6U))) + -1] + (int)(1U);
+  }
+} /* k_test */
+
+
+int main1(
+  int argc,
+  char ** argv)
+{
+  int A[8LL][7LL];
+  int * g_A;
+  int stride;
+  int batsz;
+  int iv_0;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  cudaMalloc((void **) & g_A, 192U);
+  stride = 1U;
+  batsz = stride * (int)(24U);
+  for(iv_0 = 0U; iv_0 <= (int)(7U); iv_0 = iv_0 + (int)(1U))
+  {
+    cudaMemcpy(g_A + ((stride * iv_0) * (int)(6U)), (stride * ((iv_0 * (int)(7U)) + (int)(1U))) + (int *)(&A), batsz, cudaMemcpyHostToDevice);
+  }
+  (dimGrid).x = 8U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 7U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_test <<< dimGrid, dimBlock >>>(g_A);
+  stride = 1U;
+  batsz = stride * (int)(12U);
+  for(iv_0 = 4U; iv_0 <= (int)(8U); iv_0 = iv_0 + (int)(1U))
+  {
+    cudaMemcpy((stride * ((iv_0 * (int)(7U)) + (int)(4U))) + (int *)(&A), g_A + (stride * ((iv_0 * (int)(6U)) + (int)(3U))), batsz, cudaMemcpyDeviceToHost);
+  }
+  cudaFree(g_A);
+  printf("%d\n", ((int *)(&A))[0U * 7U + 0U]);
+  return 0U;
+} /* main1 */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int __comma;
+  
+  __comma = main1(argc, argv);
+  return __comma;
+} /* main */
+

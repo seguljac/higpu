@@ -1,0 +1,248 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 08:25:04 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD002.cu.h"
+
+
+__global__ void test_sum_clone0(
+  int * g_b0,
+  int * g_result0,
+  int m)
+{
+  register int __comma;
+  int i;
+  
+  __comma = foo(g_b0, m);
+  * g_result0 = *g_result0 + __comma;
+  i = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(2U));
+  * g_result0 = *g_result0 + g_b0[i];
+} /* test_sum_clone0 */
+
+
+__global__ void test_sum(
+  int * g_b,
+  int * g_result)
+{
+  register int __comma;
+  int i;
+  
+  __comma = fooclone1clone0(g_b);
+  * g_result = *g_result + __comma;
+  i = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(2U));
+  * g_result = *g_result + g_b[i];
+} /* test_sum */
+
+
+__device__ int fooclone1clone0(
+  int * g_f)
+{
+  int x;
+  int j;
+  int j_init;
+  int j_end;
+  int j_step;
+  int tripcount;
+  int tblk_stride;
+  
+  x = g_f[1];
+  g_f[0] = g_f[0] + (int)(1U);
+  tripcount = 4;
+  tblk_stride = ((tripcount + -1) / (int)(2U)) + 1;
+  j_init = (tblk_stride * (int)((blockIdx).x)) + (int)(1U);
+  j_end = (j_init + tblk_stride) + -1;
+  j_step = 1;
+  for(j = j_init; j <= j_end; j = j + j_step)
+  {
+    g_f[0] = g_f[j] + g_f[0];
+  }
+  return g_f[0] + x;
+} /* fooclone1clone0 */
+
+
+__device__ int foo(
+  int * g_f0,
+  int m)
+{
+  int x;
+  int j;
+  int j_init0;
+  int j_end0;
+  int j_step0;
+  int tripcount;
+  int tblk_stride;
+  
+  x = *(g_f0 + 1LL);
+  * g_f0 = *g_f0 + (int)(1U);
+  tripcount = 4;
+  tblk_stride = ((tripcount + -1) / (int)(2U)) + 1;
+  j_init0 = (tblk_stride * (int)((blockIdx).x)) + (int)(1U);
+  j_end0 = (j_init0 + tblk_stride) + -1;
+  j_step0 = 1;
+  for(j = j_init0; j <= j_end0; j = j + j_step0)
+  {
+    * g_f0 = *g_f0 + *(g_f0 + (unsigned int)(j));
+  }
+  return * g_f0 + x;
+} /* foo */
+
+
+int fooclone0(
+  int * f)
+{
+  int x;
+  int j;
+  
+  x = f[1U];
+  f[0U] = f[0U] + (int)(1U);
+  for(j = 1U; j <= (int)(4U); j = j + (int)(1U))
+  {
+    f[0U] = f[j] + f[0U];
+  }
+  return f[0U] + x;
+} /* fooclone0 */
+
+
+int foo1(
+  int x)
+{
+  int j;
+  
+  x = x + (int)(1U);
+  for(j = 1U; j <= (int)(4U); j = j + (int)(1U))
+  {
+    arr[0U] = arr[j] + arr[0U];
+  }
+  return x + (int)(3U);
+} /* foo1 */
+
+
+int fooclone1(
+  int * f)
+{
+  int x;
+  int j;
+  
+  x = f[1U];
+  f[0U] = f[0U] + (int)(1U);
+  for(j = 1U; j <= (int)(4U); j = j + (int)(1U))
+  {
+    f[0U] = f[j] + f[0U];
+  }
+  return f[0U] + x;
+} /* fooclone1 */
+
+
+int sum1(
+  int * b,
+  int m)
+{
+  int result;
+  int * g_b;
+  int stride;
+  int batsz;
+  int * g_result;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  b[m + -1] = b[2U] + (int)(1U);
+  cudaMalloc((void **) & g_b, 24U);
+  stride = 1U;
+  batsz = stride * (int)(24U);
+  cudaMemcpy(g_b, b, batsz, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_result, 4U);
+  (dimGrid).x = 2U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 2U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  test_sum <<< dimGrid, dimBlock >>>(g_b, g_result);
+  cudaFree(g_b);
+  cudaFree(g_result);
+  return result;
+} /* sum1 */
+
+
+int sum1clone0(
+  int * b,
+  int m)
+{
+  int result;
+  int * g_b0;
+  int stride;
+  int batsz;
+  int * g_result0;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  b[m + -1] = b[2U] + (int)(1U);
+  cudaMalloc((void **) & g_b0, m * (int)(4U));
+  stride = 1U;
+  batsz = (m * stride) * (int)(4U);
+  cudaMemcpy(g_b0, b, batsz, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_result0, 4U);
+  (dimGrid).x = 2U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 2U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  test_sum_clone0 <<< dimGrid, dimBlock >>>(g_b0, g_result0, m);
+  cudaFree(g_b0);
+  cudaFree(g_result0);
+  return result;
+} /* sum1clone0 */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register unsigned int __comma;
+  register int __comma0;
+  register int __comma1;
+  register int __comma2;
+  register int __comma3;
+  register int __comma4;
+  register int __comma5;
+  register int __comma6;
+  int x;
+  int i;
+  int * a;
+  int * c;
+  int n;
+  int(*b)[5LL];
+  int(*a_c)[6LL];
+  int * a_a;
+  int(*a_a0)[4LL];
+  
+  a = (int *)((int(*)[6LL])(((signed char *) & arr) + 4LL));
+  __comma = (unsigned int) malloc(24U);
+  c = (int *) __comma;
+  a_c = (int(*)[6LL])(c);
+  __comma0 = atoi(*argv);
+  n = __comma0;
+  a_a = a;
+  __comma1 = sum1clone0(a_a, n);
+  x = __comma1;
+  __comma2 = sum1((int *) arr, 6U);
+  x = x + __comma2;
+  __comma3 = fooclone1((int *) a_c);
+  x = x + __comma3;
+  __comma4 = foo1(3U);
+  x = x + __comma4;
+  __comma5 = foo1(4U);
+  x = x + __comma5;
+  a_a0 = (int(*)[4LL])(a);
+  __comma6 = fooclone0((int *) a_a0);
+  x = x + __comma6;
+  for(i = 0U; i <= (int)(3U); i = i + (int)(1U))
+  {
+    x = (*b)[i] + x;
+  }
+  arr[0U] = 0U;
+  return x;
+} /* main */
+

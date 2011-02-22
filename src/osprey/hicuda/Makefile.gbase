@@ -1,0 +1,335 @@
+#
+#  Makefile.base for hicuda
+#
+
+#----------------------------------------------------------------------
+#  Set environment variables
+#
+#  TARGDIR   :  is the targ specific directory in which we do build. 
+#               e.q.  /d1/cmplrs.src/v4.00/host32
+#
+#----------------------------------------------------------------------
+TARGDIR = $(BUILD_AREA)
+
+#----------------------------------------------------------------------
+#  Include the usual commondefs
+#----------------------------------------------------------------------
+include $(COMMONDEFS)
+
+#----------------------------------------------------------------------
+#  Set environment variables
+#----------------------------------------------------------------------
+
+#----------------------------------------------------------------------
+#  Compiler Options
+#----------------------------------------------------------------------
+
+# These are here because they are needed both in fecc and in common so just
+# putting them in fecc/defines.h is not enough:
+
+HOSTDEFS += -DIN_GCC -DHAVE_CONFIG_H
+
+ifeq ($(BUILD_TARGET), IA64)
+HOSTDEFS += -DTARGET_NAME=\"ia64-linux\"
+endif
+ifeq ($(BUILD_TARGET), IA32)
+HOSTDEFS += -DTARGET_NAME=\"i686-pc-linux-gnu\"
+endif
+ifeq ($(BUILD_TARGET), X8664)
+HOSTDEFS += -DTARGET_NAME=\"i686-pc-linux-gnu\"
+endif
+ifeq ($(BUILD_TARGET), MIPS)
+HOSTDEFS += -DTARGET_NAME=\"mips-sgi-irix6\"
+endif
+
+HOSTDEFS += -DLONGLONG
+# HOSTDEFS += -DFRONT_END
+HOSTDEFS += -DIR_TOOLS
+HOSTDEFS += -DUSE_DECL_SRCPOS
+# HOSTDEFS += -DFRONT_END_C
+HOSTDEFS += -DCFE -DCIL
+HOSTDEFS += -DDO_IL_LOWERING=0
+HOSTDEFS += -DNO_USR_INCLUDE=TRUE
+HOSTDEFS += -DAUTOMATIC_TEMPLATE_INSTANTIATION=0
+HOSTDEFS += -DINSTANTIATION_BY_IMPLICIT_INCLUSION=0
+HOSTDEFS += -DBACK_END_IS_C_GEN_BE=0
+HOSTDEFS += -DMONGOOSE_CIF
+HOSTDEFS += -DHAVE__BOOL
+
+HOSTDEFS += -DSGI_RAG_BACKEND
+HOSTDEFS += -DSGI_MONGOOSE
+HOSTDEFS += -DHANDLE_PRAGMA_WEAK
+HOSTDEFS += -DMIPSEL
+
+# DAVID CODE BEGIN
+HOSTDEFS += -DHICUDA
+HOSTDEFS += -DMONGOOSE_BE
+HOSTDEFS += -DBACK_END
+# DAVID CODE END
+
+ifeq ($(BUILD_OPTIMIZE), DEBUG)
+HOSTDEFS += -DIs_True_On
+HOSTDEFS += -DInsist_On 
+HOSTDEFS += -DDEBUG=1
+HOSTDEFS += -DCHECKING=1
+else
+HOSTDEFS += -DDEBUG=0 
+HOSTDEFS += -DCHECKING=0 
+endif
+
+ifeq ($(BUILD_OS), LINUX)
+TARGDEFS = -D__MIPS_AND_IA64_ELF_H
+endif
+
+#----------------------------------------------------------------------
+#  List of directories, and source files of interest
+#----------------------------------------------------------------------
+
+HICUDA_DIR = $(BUILD_BASE)
+
+# DAVID CODE BEGIN
+# for pre-optimizer (part of WOPT)
+BE_DIR = $(BUILD_TOT)/be
+BE_BE_DIR = $(BE_DIR)/be
+BE_COM_DIR = $(BE_DIR)/com
+BE_OPT_DIR = $(BE_DIR)/opt
+BE_REGION_DIR = $(BE_DIR)/region
+# DAVID CODE END
+
+# DAVID CODE BEGIN
+COMMON_DIR = $(BUILD_TOT)/common
+COMMON_COM_DIR = $(COMMON_DIR)/com
+COMMON_COM_TARG_DIR	= $(COMMON_DIR)/com/$(BUILD_TARGET_DIR)
+# for pre-optimizer (part of WOPT)
+COMMON_STL_DIR = $(COMMON_DIR)/stl
+# DAVID CODE END
+COMMON_TARG_INFO_ACCESS_DIR = $(BUILD_TOT)/common/targ_info/access
+COMMON_UTIL_DIR = $(BUILD_TOT)/common/util
+COMMON_UTIL_TARG_DIR = $(BUILD_TOT)/common/util/$(BUILD_TARGET_DIR)
+
+INCLUDE_DIR = $(BUILD_AREA)/include
+
+GNU_DIR = $(BUILD_BASE)/gnu
+GNU_CONFIG_DIR = $(BUILD_BASE)/gnu/config
+
+GNU_TARG_DIR = $(GNU_DIR)/$(BUILD_TARGET_DIR)
+GNU_CONFIG_TARG_DIR = $(GNU_CONFIG_DIR)/$(BUILD_TARGET_DIR)
+ifeq ($(BUILD_TARGET), IA32)
+GNU_TARG_DIR = $(GNU_DIR)/i386
+GNU_CONFIG_TARG_DIR = $(GNU_CONFIG_DIR)/i386
+COMMON_COM_TARG_DIR	= $(BUILD_TOT)/common/com/x8664
+COMMON_UTIL_TARG_DIR	= $(BUILD_TOT)/common/util/x8664
+endif
+ifeq ($(BUILD_TARGET), X8664)
+GNU_TARG_DIR = $(GNU_DIR)/i386
+GNU_CONFIG_TARG_DIR = $(GNU_CONFIG_DIR)/i386
+endif
+ifeq ($(BUILD_TARGET), MIPS)
+GNU_CONFIG_TARG_DIR = $(GNU_CONFIG_DIR)/mips
+endif
+
+TARG_COMUTIL_DIR	= $(TARGDIR)/libcomutil
+TARG_CMPLRS_DIR		= $(TARGDIR)/libcmplrs
+TARG_LIBIBERTY_DIR      = $(TARGDIR)/libiberty
+TARG_GNU_DIR		= $(TARGDIR)/gccfe/gnu
+# DAVID CODE BEGIN
+# for pre-optimizer (part of WOPT)
+TARG_BE_DIR = $(TARGDIR)/be
+TARG_OPT_DIR = $(TARGDIR)/wopt
+TARG_LNO_DIR = $(TARGDIR)/lno
+TARG_IPL_DIR = $(TARGDIR)/ipl
+TARG_TARG_INFO_DIR = $(TARGDIR)/targ_info
+# DAVID CODE END
+
+# These are the directories in which to look for source files.
+
+SRC_DIRS =	\
+	$(HICUDA_DIR)
+
+	#$(COMMON_COM_DIR)	\
+	$(COMMON_COM_TARG_DIR)	\
+	$(COMMON_UTIL_DIR)	\
+	$(COMMON_UTIL_TARG_DIR)	\
+	$(COMMON_TARG_INFO_ACCESS_DIR)
+
+INC_DIRS =		\
+	$(INCLUDE_DIR)	\
+	$(BE_BE_DIR)	\
+	$(BE_COM_DIR)	\
+	$(BE_OPT_DIR)	\
+	$(BE_REGION_DIR)	\
+	$(TARGDIR)/targ_info	\
+	$(TARGDIR)/include	\
+	$(TARG_BE_DIR)	\
+	$(COMMON_COM_DIR)	\
+	$(COMMON_COM_TARG_DIR)	\
+	$(COMMON_STL_DIR)	\
+	$(COMMON_UTIL_DIR)	\
+	$(COMMON_UTIL_TARG_DIR)\
+	$(COMMON_TARG_INFO_ACCESS_DIR) \
+	$(HICUDA_DIR)		\
+	$(GNU_DIR)		\
+	$(GNU_TARG_DIR)	\
+	$(GNU_CONFIG_DIR)	\
+	$(GNU_CONFIG_TARG_DIR) \
+	$(BUILD_TOT)/include/gnu \
+	$(BUILD_TOT)/include \
+	$(TARG_GNU_DIR) # For finding insn-config.h in wfe_stmt.cxx
+
+#----------------------------------------------------------------------
+#  List of source files.  Please keep them in alphabetical order.
+#----------------------------------------------------------------------
+
+# DAVID CODE BEGIN
+HICUDA_C_SRCS =		\
+
+HICUDA_CXX_SRCS =	\
+	hc_stack.cxx	\
+	hc_handlers.cxx	\
+	hc_utils.cxx	\
+	cuda_utils.cxx	\
+	bitvector.cxx	\
+	cmp_symtab.cxx	\
+	hc_bb.cxx		\
+	hc_cfg.cxx		\
+	hc_dfa.cxx		\
+	hc_livevar.cxx	\
+	hc_ty_cleanup.cxx	\
+	hc_symtab.cxx	\
+	hc_cuda_inc.cxx	\
+	hc_subscript.cxx	\
+	driver.cxx
+# DAVID CODE END
+
+#----------------------------------------------------------------------
+# Define variables for the common rules
+#----------------------------------------------------------------------
+
+# A list of directories make should search for prerequisites.
+VPATH = $(SRC_DIRS)
+
+# All C source files needed (used in common rules)
+CFILES =	\
+  	$(HICUDA_C_SRCS)
+
+# All C++ source files needed (used in common rules)
+CXXFILES =	\
+  	$(HICUDA_CXX_SRCS)
+
+# Local C options, defs and includes
+LCOPTS = $(STD_COMPILE_OPTS) $(STD_C_OPTS) -Wall
+LCDEFS = $(HOSTDEFS) $(TARGDEFS)
+LCINCS = $(addprefix -I, $(INC_DIRS))
+
+# Local C++ options, defs and includes
+LC++OPTS = $(STD_COMPILE_OPTS) -Wall
+LC++DEFS = $(HOSTDEFS) $(TARGDEFS)
+LC++INCS = $(addprefix -I, $(INC_DIRS))
+
+# setup stuff to build shared or non-shared ??
+GLDOPTS = $(STD_LOAD_OPTS)
+
+LDIRT =
+
+#----------------------------------------------------------------------
+#  Variables describing additional sources, objects, and libraries
+#----------------------------------------------------------------------
+
+ifeq ($(BUILD_TARGET), MIPS)
+TARGET_SO = r10000.so
+endif
+ifeq ($(BUILD_TARGET), IA64)
+TARGET_SO = itanium.so
+endif
+ifeq ($(BUILD_TARGET), IA32)
+TARGET_SO = pentium.so
+endif
+ifeq ($(BUILD_TARGET), X8664)
+TARGET_SO = opteron.so
+endif
+
+LIBIBERTY_OBJS = $(TARG_LIBIBERTY_DIR)/libiberty.a
+COMUTIL_OBJS = $(TARG_COMUTIL_DIR)/libcomutil.a
+CMPLRS_OBJS  = $(TARG_CMPLRS_DIR)/libcmplrs.a
+GNU_OBJS = $(TARG_GNU_DIR)/libgfec.a
+
+# They will be merged into LDFLAGS.
+LLDOPTS = -Wl,--export-dynamic
+LLDLIBS = $(GNU_OBJS) $(COMUTIL_OBJS)
+LLDLIBS += -lm $(CMPLRS_OBJS)
+# DAVID CODE BEGIN
+# Follow what is being done in be/lno/Makefile.gbase.
+# Referring to the original wopt.so in TARG_OPT_DIR/wopt/ does not work.
+LLDLIBS += be.so wopt.so lno.so ipl.so $(TARGET_SO) libiberty.a
+# DAVID CODE END
+
+#----------------------------------------------------------------------
+# Base rule
+#----------------------------------------------------------------------
+
+TARGETS = hicuda
+
+default: first $(TARGETS) last
+
+install: default
+ifeq ($(BUILD_OS), LINUX)
+	$(STD_INSTALL) $(STD_INSTALL_EXEC_MASK) -D $(TARGETS) $(STD_MONGOOSE_LINUX_LOC)/$(TARGETS)
+else
+	$(STD_INSTALL) -F $(STD_MONGOOSE_LOC) $(TARGETS)
+endif
+
+#----------------------------------------------------------------------
+# Commands done BEFORE any other target is built
+#----------------------------------------------------------------------
+first:
+	$(call submake,$(TARG_GNU_DIR))
+	$(call submake,$(TARG_CMPLRS_DIR))
+	$(call submake,$(TARG_COMUTIL_DIR))
+# DAVID CODE BEGIN
+## verify that libiberty.a is up to date
+	$(call submake,$(TARG_LIBIBERTY_DIR))
+ifeq ($(BUILD_OS), LINUX)
+	if ! test -a libiberty.a; then ln -sf $(LIBIBERTY_OBJS) .; fi
+endif
+## verify that the targ info stuff is up to date
+	$(call submake,$(TARG_TARG_INFO_DIR))
+# COPIED FROM be/lno/Makefile.base
+## verify that wopt.so is up to date
+	$(call submake,$(TARG_OPT_DIR))
+
+ifeq ($(BUILD_OS), LINUX)
+	if ! test -a be.so; then ln -sf $(TARG_BE_DIR)/be.so .; fi
+	if ! test -a wopt.so; then ln -sf $(TARG_OPT_DIR)/wopt.so .; fi
+	if ! test -a lno.so; then ln -sf $(TARG_LNO_DIR)/lno.so .; fi
+	if ! test -a ipl.so; then ln -sf $(TARG_IPL_DIR)/ipl.so .; fi
+	if ! test -a $(TARGET_SO); then ln -sf $(TARG_TARG_INFO_DIR)/$(TARGET_SO) .; fi
+endif
+ifeq ($(BUILD_PCH), USE_PCH)
+## build pch files first so that we can use precompiled headers
+	( $(MAKE) $(.MAKEFLAGS) BUILD_PCH=USE_PCH PCH_OPTS="-LANG:create_pch=lno_pch.pch" lno_pch.pch lno_pch.o )
+	( $(MAKE) $(.MAKEFLAGS) BUILD_PCH=USE_PCH PCH_OPTS="-LANG:use_pch=lno_pch.pch" lno_pch_files )
+endif
+# DAVID CODE END
+
+#----------------------------------------------------------------------
+# Commands done AFTER every other target is built
+#----------------------------------------------------------------------
+last: make_deps
+
+#----------------------------------------------------------------------
+# Extra rules in building the target
+#----------------------------------------------------------------------
+
+.c.E:
+	$(CCF) -MDupdate /dev/null -E ${<} | sed -e '/^ *$$/d'  >${*F}.E
+
+# OBJECTS and LDFLAGS are defined in $(COMMONDEFS)
+hicuda : $(OBJECTS) $(GNU_OBJS)
+	$(link.cxxf) -o $@ $(OBJECTS) $(GNU_OBJS) $(LDFLAGS)
+
+#----------------------------------------------------------------------
+#  Include the usual commonrules
+#----------------------------------------------------------------------
+include $(COMMONRULES)
+
+# wn_util.o: HOSTDEFS += -DMONGOOSE_BE

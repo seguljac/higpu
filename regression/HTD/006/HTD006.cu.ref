@@ -1,0 +1,122 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 18 21:48:23 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD006.cu.h"
+
+
+__global__ void test_sum(
+  int * g_a,
+  int * g_result)
+{
+  int i;
+  
+  i = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(2U));
+  * g_result = *g_result + g_a[i];
+} /* test_sum */
+
+
+int fooclone0(
+  int * b,
+  int * at)
+{
+  register int __comma;
+  int x;
+  int * g_b0;
+  int stride;
+  int batsz;
+  
+  x = at[2U];
+  at[0U] = at[0U] + (int)(1U);
+  cudaMalloc((void **) & g_b0, 20);
+  stride = 1;
+  batsz = stride * 20;
+  cudaMemcpy(g_b0, b, batsz, cudaMemcpyHostToDevice);
+  __comma = foo1(x);
+  x = x + __comma;
+  sum(b, g_b0);
+  cudaFree(g_b0);
+  return at[0U] + x;
+} /* fooclone0 */
+
+
+int sum(
+  int * a,
+  int * g_a)
+{
+  register int __comma;
+  register int __comma0;
+  int result;
+  int * g_result;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  cudaMalloc((void **) & g_result, 4U);
+  __comma = fooclone0(a, a);
+  result = __comma;
+  __comma0 = fooclone0(a, a);
+  result = result + __comma0;
+  (dimGrid).x = 2U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 2U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  test_sum <<< dimGrid, dimBlock >>>(g_a, g_result);
+  cudaFree(g_result);
+  return result;
+} /* sum */
+
+
+int foo1(
+  int x)
+{
+  
+  return x + (int)(1U);
+} /* foo1 */
+
+
+int foo(
+  int * b,
+  int * at)
+{
+  register int __comma;
+  int x;
+  int * g_b;
+  int stride;
+  int batsz;
+  
+  x = at[2U];
+  at[0U] = at[0U] + (int)(1U);
+  cudaMalloc((void **) & g_b, 20);
+  stride = 1;
+  batsz = stride * 20;
+  cudaMemcpy(g_b, b, batsz, cudaMemcpyHostToDevice);
+  __comma = foo1(x);
+  x = x + __comma;
+  sum(b, g_b);
+  cudaFree(g_b);
+  return at[0U] + x;
+} /* foo */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int __comma;
+  int x;
+  int i;
+  int(*b)[5LL];
+  
+  __comma = foo((int *) arr, (int *) arr);
+  x = __comma;
+  for(i = 0U; i <= (int)(3U); i = i + (int)(1U))
+  {
+    x = (*b)[i] + x;
+  }
+  arr[0U] = 0U;
+  return x;
+} /* main */
+

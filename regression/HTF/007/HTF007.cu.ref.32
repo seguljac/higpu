@@ -1,0 +1,22 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 10:41:37 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTF007.cu.h"
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  float * arr[3LL];
+  
+  * arr = (float *)(0U);
+  * (arr + 1LL) = (float *)(0U);
+  * (arr + 2LL) = (float *)(0U);
+  arr[2U] = (float *)(1U);
+  printf("%x, %x, %x\n", arr[0U], arr[1U], arr[2U]);
+  return 0U;
+} /* main */
+

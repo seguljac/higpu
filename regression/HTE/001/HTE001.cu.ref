@@ -1,0 +1,127 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 10:19:27 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTE001.cu.h"
+
+
+__global__ void k_looppart_ex(
+  float * g_arr)
+{
+  int i;
+  int i_init;
+  int i_end;
+  int i_step;
+  int tripcount;
+  int tblk_stride;
+  int i_init0;
+  int i_end0;
+  int i_step0;
+  
+  tripcount = 1024U;
+  tblk_stride = ((tripcount + -1) / (int)(8U)) + (int)(1U);
+  i_init = tblk_stride * (int)((blockIdx).x);
+  i_end = (i_init + tblk_stride) + -1;
+  i_step = 1U;
+  for(i = i_init; i <= i_end; i = i + i_step)
+  {
+    foo(g_arr, i);
+  }
+  i_init0 = (int)(1023U) - ((int)((threadIdx).z) + ((int)((blockIdx).x) * (int)(2U)));
+  i_end0 = 0U;
+  i_step0 = -16LL;
+  for(i = i_init0; i >= i_end0; i = i + i_step0)
+  {
+    bar(g_arr, i);
+  }
+} /* k_looppart_ex */
+
+
+__device__ void barclone0(
+  float * g_b0,
+  int end)
+{
+  int i;
+  int i_init3;
+  int i_end3;
+  int i_step3;
+  
+  i_init3 = (threadIdx).z;
+  i_end3 = end + -1;
+  i_step3 = 2;
+  for(i = i_init3; i <= i_end3; i = i + i_step3)
+  {
+    g_b0[i] = g_b0[i] - g_b0[end];
+  }
+  return;
+} /* barclone0 */
+
+
+__device__ void bar(
+  float * g_b,
+  int end)
+{
+  int i;
+  int i_init1;
+  int i_end1;
+  int i_step1;
+  
+  i_init1 = (threadIdx).y;
+  i_end1 = end + -1;
+  i_step1 = 3;
+  for(i = i_init1; i <= i_end1; i = i + i_step1)
+  {
+    g_b[i] = g_b[i] - g_b[end];
+  }
+  return;
+} /* bar */
+
+
+__device__ void foo(
+  float * g_a,
+  int start)
+{
+  int i;
+  int i_init2;
+  int i_end2;
+  int i_step2;
+  
+  i_init2 = start + (int)((threadIdx).z);
+  i_end2 = 1023U;
+  i_step2 = 2;
+  for(i = i_init2; i <= i_end2; i = i + i_step2)
+  {
+    g_a[i] = g_a[start] + g_a[i + -1];
+  }
+  barclone0(g_a, start);
+  return;
+} /* foo */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  float arr[1024LL];
+  float * g_arr;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  cudaMalloc((void **) & g_arr, 4096U);
+  stride = 1U;
+  batsz = stride * (int)(4096U);
+  cudaMemcpy(g_arr, arr, batsz, cudaMemcpyHostToDevice);
+  (dimGrid).x = 8U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 32;
+  (dimBlock).y = 3U;
+  (dimBlock).z = 2U;
+  k_looppart_ex <<< dimGrid, dimBlock >>>(g_arr);
+  cudaFree(g_arr);
+  return 0U;
+} /* main */
+

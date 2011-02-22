@@ -1,0 +1,97 @@
+/*******************************************************
+ * CUDA file generated at Sun Jun 20 20:48:59 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD014.cu.h"
+
+
+__global__ void k_test(
+  int * g_a_arr,
+  int n_threads,
+  int x)
+{
+  int i;
+  int y;
+  int i_init;
+  int i_end;
+  int i_step;
+  int tripcount;
+  int tblk_stride;
+  
+  tripcount = 0U;
+  if((n_threads + -1) >= (int)(0U))
+  {
+    tripcount = n_threads;
+  }
+  tblk_stride = tripcount;
+  i_init = tblk_stride * (int)((blockIdx).x);
+  i_end = (i_init + tblk_stride) + -1;
+  if(i_end > (n_threads + -1))
+  {
+    i_end = n_threads + -1;
+  }
+  i_init = i_init + (int)((threadIdx).x);
+  i_step = 10U;
+  for(i = i_init; i <= i_end; i = i + i_step)
+  {
+    if(((unsigned int)(x) & 1U) != 0U)
+    {
+      y = x;
+    }
+    if(((unsigned int)(x) & 1U) != 0U)
+    {
+      g_a_arr[i] = g_a_arr[i] + y;
+    }
+  }
+} /* k_test */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int __comma;
+  register unsigned long long __comma0;
+  register int __comma1;
+  int n_threads;
+  int x;
+  int * arr;
+  int * a_arr;
+  int * g_a_arr;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  __comma = atoi(*(argv + 2LL));
+  n_threads = __comma;
+  __comma0 = (unsigned long long) calloc(n_threads, 4U);
+  arr = (int *) __comma0;
+  if((unsigned long long)(arr) == (unsigned long long)(0U))
+  {
+    __assert_fail("arr != ((void *)0)", "HTD014.c", 21U, "main");
+  }
+  __comma1 = atoi(*(argv + 1LL));
+  x = __comma1;
+  a_arr = arr;
+  cudaMalloc((void **) & g_a_arr, n_threads * (int)(4U));
+  stride = 1U;
+  batsz = (n_threads * stride) * (int)(4U);
+  cudaMemcpy(g_a_arr, a_arr, batsz, cudaMemcpyHostToDevice);
+  (dimGrid).x = 1U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 10U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_test <<< dimGrid, dimBlock >>>(g_a_arr, n_threads, x);
+  stride = 1U;
+  batsz = (n_threads * stride) * (int)(4U);
+  cudaMemcpy(a_arr, g_a_arr, batsz, cudaMemcpyDeviceToHost);
+  cudaFree(g_a_arr);
+  printf("arr[0] = %d\n", a_arr[0U]);
+  free(a_arr);
+  return 0U;
+} /* main */
+

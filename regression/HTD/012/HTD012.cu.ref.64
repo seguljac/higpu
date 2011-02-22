@@ -1,0 +1,63 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 18 21:59:18 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD012.cu.h"
+
+
+__global__ void k_test(
+  float * g_a_arr,
+  int h,
+  int w)
+{
+  int i;
+  int j;
+  
+  for(i = 0U; h > i; i = i + (int)(1U))
+  {
+    for(j = 0U; w > j; j = j + (int)(1U))
+    {
+      g_a_arr[j + (w * i)] = g_a_arr[j + (w * i)] + 1.0F;
+    }
+  }
+} /* k_test */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register unsigned long long __comma;
+  float * arr;
+  int h;
+  int w;
+  float * a_arr;
+  float * g_a_arr;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  h = argc + (int)(128U);
+  w = argc + (int)(256U);
+  __comma = (unsigned long long) calloc((long long)(h * w), 4U);
+  arr = (float *) __comma;
+  a_arr = arr;
+  cudaMalloc((void **) & g_a_arr, (h * w) * (int)(4U));
+  cudaMemset(g_a_arr, 0U, (h * w) * (int)(4U));
+  (dimGrid).x = 1U;
+  (dimGrid).y = 1U;
+  (dimGrid).z = 1;
+  (dimBlock).x = 1U;
+  (dimBlock).y = 1U;
+  (dimBlock).z = 1;
+  k_test <<< dimGrid, dimBlock >>>(g_a_arr, h, w);
+  stride = w;
+  batsz = (h * stride) * (int)(4U);
+  cudaMemcpy(a_arr, g_a_arr, batsz, cudaMemcpyDeviceToHost);
+  cudaFree(g_a_arr);
+  free(a_arr);
+  return 0U;
+} /* main */
+

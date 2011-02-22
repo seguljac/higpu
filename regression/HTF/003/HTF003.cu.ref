@@ -1,0 +1,54 @@
+/*******************************************************
+ * CUDA file generated at Mon Feb  7 07:49:25 2011
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTF003.cu.h"
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register unsigned long long __comma;
+  register int __comma0;
+  register int __comma1;
+  register int renumberedPREG;
+  int src;
+  int dest;
+  struct _IO_FILE * fin;
+  float x;
+  float y;
+  int c;
+  
+  sscanf(*argv, "%d", &src);
+  printf("Hello world!\n");
+  memcpy(&dest, &src, 4U);
+  __comma = (unsigned long long) fopen("test.txt", "r");
+  fin = (struct _IO_FILE *) __comma;
+  if((unsigned long long)(fin) != (unsigned long long)(0U))
+  {
+    __comma0 = fscanf(fin, "%f %f", &x, &y);
+    if(__comma0 == (int)(2U))
+    {
+      printf("%f %f", (double)(x), (double)(y));
+    }
+    fclose(fin);
+  }
+  __comma1 = getopt(argc, argv, "a:b:c:d");
+  c = __comma1;
+  while(c != -1)
+  {
+    if(c == (int)(97U))
+      goto _1;
+    goto _2;
+    _1 :;
+    printf("a");
+    goto _2;
+    _2 :;
+    renumberedPREG = getopt(argc, argv, "a:b:c:d");
+    c = renumberedPREG;
+  }
+  return 0U;
+} /* main */
+

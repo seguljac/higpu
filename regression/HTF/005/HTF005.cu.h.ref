@@ -1,0 +1,23 @@
+/* Include standard C library headers */
+
+/* Include CUDA runtime library headers */
+#include <cuda_runtime.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Include builtin types and operators */
+#include "whirl2c.h"
+
+/* Types */
+struct elem_t {
+  int nodes[4LL];
+};
+
+/* File-level variables and routines */
+#ifdef __cplusplus
+}
+#endif
+
+/* File-level CUDA variables */

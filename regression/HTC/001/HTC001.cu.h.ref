@@ -1,0 +1,29 @@
+/* Include standard C library headers */
+
+/* Include CUDA runtime library headers */
+#include <cuda_runtime.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Include builtin types and operators */
+#include "whirl2c.h"
+
+/* Types */
+/* File-level variables and routines */
+int glob_a[5LL];
+
+__device__ void kernel_callee(float *);
+
+__global__ void k_name(float *);
+
+#ifdef __cplusplus
+}
+#endif
+
+/* File-level CUDA variables */
+__constant__ unsigned int cmem[256LL];
+
+extern __shared__ unsigned int smem[];
+

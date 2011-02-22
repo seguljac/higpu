@@ -1,0 +1,78 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 08:23:12 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD001.cu.h"
+
+
+__global__ void gpu_compute1(
+  long * g_a_arr)
+{
+  register int __comma;
+  int i;
+  
+  i = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(63U));
+  if(i <= (int)(999U))
+  {
+    __comma = computeclone0(i);
+    g_a_arr[i] = __comma;
+  }
+} /* gpu_compute1 */
+
+
+long compute(
+  long x)
+{
+  
+  return(x * x) - x;
+} /* compute */
+
+
+__device__ long computeclone0(
+  long x)
+{
+  
+  return(x * x) - x;
+} /* computeclone0 */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register unsigned int __comma;
+  register int __comma0;
+  long * arr;
+  int i;
+  long(*a_arr)[1000LL];
+  long * g_a_arr;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  __comma = (unsigned int) malloc(4000U);
+  arr = (long *) __comma;
+  a_arr = (long(*)[1000LL])(arr);
+  cudaMalloc((void **) & g_a_arr, 4000U);
+  (dimGrid).x = 16U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 256U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  gpu_compute1 <<< dimGrid, dimBlock >>>(g_a_arr);
+  for(i = 0U; i <= (int)(999U); i = i + (int)(1U))
+  {
+    __comma0 = compute((*a_arr)[i]);
+    (*a_arr)[i] = __comma0;
+  }
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(a_arr, g_a_arr, batsz, cudaMemcpyDeviceToHost);
+  cudaFree(g_a_arr);
+  printf("arr[10] = %ld\n", (*a_arr)[10U]);
+  return 0U;
+} /* main */
+

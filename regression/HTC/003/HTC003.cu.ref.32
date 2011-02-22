@@ -1,0 +1,158 @@
+/*******************************************************
+ * CUDA file generated at Thu Jun 10 22:04:43 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTC003.cu.h"
+
+
+__global__ void matrixMul(
+  float * g_a_A,
+  float * g_a_B,
+  float * g_a_C)
+{
+  int i;
+  int j;
+  int k;
+  int kk;
+  float sum;
+  float * s_a_A;
+  float * s_a_B;
+  int gcs_sz;
+  int gcs_ofst;
+  int scs_sz;
+  int scs_ofst;
+  int warp_id;
+  int id_within_warp;
+  int iv_0;
+  int cs_id;
+  int g_cs_ofst;
+  int s_cs_ofst;
+  int thr_ofst;
+  
+  i = (int)((threadIdx).y) + ((int)((blockIdx).y) * (int)(16U));
+  j = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(16U));
+  sum = 0.0F;
+  for(kk = 0U; kk <= (int)(1008U); kk = kk + (int)(16U))
+  {
+    s_a_A = (float *)(&smem);
+    gcs_sz = 1024U;
+    gcs_ofst = kk + ((i - (int)((threadIdx).y)) * (int)(1024U));
+    scs_sz = 16U;
+    scs_ofst = 0U;
+    warp_id = (threadIdx).y;
+    id_within_warp = (threadIdx).x;
+    iv_0 = warp_id;
+    cs_id = iv_0;
+    g_cs_ofst = gcs_ofst + (gcs_sz * cs_id);
+    s_cs_ofst = scs_ofst + (scs_sz * cs_id);
+    thr_ofst = id_within_warp;
+    s_a_A[s_cs_ofst + thr_ofst] = g_a_A[g_cs_ofst + thr_ofst];
+    s_a_B = ((float *)(&smem) + 256LL);
+    gcs_sz = 1024U;
+    gcs_ofst = (j + (kk * (int)(1024U))) - (int)((threadIdx).x);
+    scs_sz = 16U;
+    scs_ofst = 0U;
+    warp_id = (threadIdx).y;
+    id_within_warp = (threadIdx).x;
+    iv_0 = warp_id;
+    cs_id = iv_0;
+    g_cs_ofst = gcs_ofst + (gcs_sz * cs_id);
+    s_cs_ofst = scs_ofst + (scs_sz * cs_id);
+    thr_ofst = id_within_warp;
+    s_a_B[s_cs_ofst + thr_ofst] = g_a_B[g_cs_ofst + thr_ofst];
+    __syncthreads();
+    for(k = 0U; k <= (int)(15U); k = k + (int)(1U))
+    {
+      sum = sum + (s_a_A[k + ((int)((threadIdx).y) * (int)(16U))] * s_a_B[(int)((threadIdx).x) + (k * (int)(16U))]);
+    }
+    __syncthreads();
+  }
+  g_a_C[j + (i * (int)(1024U))] = sum;
+} /* matrixMul */
+
+
+__inline float get_time_diff(
+  const struct timeval * start,
+  const struct timeval * end)
+{
+  
+  return(_QUAD)(((float)(((end) -> tv_sec - (start) -> tv_sec)) * 1.0e+03F) + ((float)(((end) -> tv_usec - (start) -> tv_usec)) * 1.0000000475e-03F));
+} /* get_time_diff */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register unsigned int __comma;
+  register unsigned int __comma0;
+  register unsigned int __comma1;
+  register unsigned int __comma2;
+  register float __comma4;
+  float * A;
+  float * B;
+  float * C;
+  float * reference;
+  struct timeval start_time;
+  struct timeval end_time;
+  float(*a_A)[1024LL][1024LL];
+  float(*a_B)[1024LL][1024LL];
+  float(*a_C)[1024LL][1024LL];
+  float * g_a_A;
+  int stride;
+  int batsz;
+  float * g_a_B;
+  float * g_a_C;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  __comma = (unsigned int) malloc(4194304U);
+  A = (float *) __comma;
+  __comma0 = (unsigned int) malloc(4194304U);
+  B = (float *) __comma0;
+  __comma1 = (unsigned int) malloc(4194304U);
+  C = (float *) __comma1;
+  __comma2 = (unsigned int) malloc(4194304U);
+  reference = (float *) __comma2;
+  a_A = (float(*)[1024LL][1024LL])(A);
+  a_B = (float(*)[1024LL][1024LL])(B);
+  a_C = (float(*)[1024LL][1024LL])(C);
+  srand(2008U);
+  randomInitArr((float *) a_A, 1048576U);
+  randomInitArr((float *) a_B, 1048576U);
+  cudaMalloc((void **) & g_a_A, 4194304U);
+  stride = 1024U;
+  batsz = stride * (int)(4096U);
+  cudaMemcpy(g_a_A, a_A, batsz, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_a_B, 4194304U);
+  stride = 1024U;
+  batsz = stride * (int)(4096U);
+  cudaMemcpy(g_a_B, a_B, batsz, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_a_C, 4194304U);
+  gettimeofday(&start_time, (struct timezone *) 0U);
+  (dimGrid).x = 64U;
+  (dimGrid).y = 64U;
+  (dimGrid).z = 1;
+  (dimBlock).x = 16U;
+  (dimBlock).y = 16U;
+  (dimBlock).z = 1;
+  matrixMul <<< dimGrid, dimBlock, 2048 >>>(g_a_A, g_a_B, g_a_C);
+  stride = 1024U;
+  batsz = stride * (int)(4096U);
+  cudaMemcpy(a_C, g_a_C, batsz, cudaMemcpyDeviceToHost);
+  cudaFree(g_a_A);
+  cudaFree(g_a_B);
+  cudaFree(g_a_C);
+  gettimeofday(&end_time, (struct timezone *) 0U);
+  __comma4 = get_time_diff(&start_time, &end_time);
+  printf("Time elapsed: %6f ms\n", (double)(__comma4));
+  computeGold(reference, (const float *) a_A, (const float *) a_B, 1024U, 1024U, 1024U);
+  compare_matrices((float *) a_C, reference, 1048576U);
+  free(a_A);
+  free(a_B);
+  free(a_C);
+  free(reference);
+  return 0U;
+} /* main */
+

@@ -1,0 +1,140 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 08:38:26 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD003.cu.h"
+
+
+__global__ void test_sum_clone0(
+  int * g_a0,
+  int * g_result0)
+{
+  int i;
+  
+  for(i = 0U; i <= (int)(3U); i = i + (int)(1U))
+  {
+    * g_result0 = *g_result0 + g_a0[i];
+  }
+} /* test_sum_clone0 */
+
+
+__global__ void test_sum(
+  int * g_a,
+  int * g_result)
+{
+  int i;
+  
+  for(i = 0U; i <= (int)(3U); i = i + (int)(1U))
+  {
+    * g_result = *g_result + g_a[i];
+  }
+} /* test_sum */
+
+
+int sumclone0(
+  int * a)
+{
+  register int __comma;
+  int result;
+  int * g_a0;
+  int stride;
+  int batsz;
+  int * g_result0;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  a[2U] = a[2U] + (int)(1U);
+  cudaMalloc((void **) & g_a0, 20U);
+  stride = 1U;
+  batsz = stride * (int)(20U);
+  cudaMemcpy(g_a0, a, batsz, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_result0, 4U);
+  __comma = foo(a, a);
+  result = __comma;
+  (dimGrid).x = 2U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 2U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  test_sum_clone0 <<< dimGrid, dimBlock >>>(g_a0, g_result0);
+  cudaFree(g_a0);
+  cudaFree(g_result0);
+  return result;
+} /* sumclone0 */
+
+
+int foo(
+  int * b,
+  int * at)
+{
+  int x;
+  int * g_b;
+  int stride;
+  int batsz;
+  
+  x = at[1U];
+  at[0U] = at[0U] + (int)(1U);
+  cudaMalloc((void **) & g_b, 20);
+  stride = 1;
+  batsz = stride * 20;
+  cudaMemcpy(g_b, b, batsz, cudaMemcpyHostToDevice);
+  sumclone0(b);
+  cudaFree(g_b);
+  return at[0U] + x;
+} /* foo */
+
+
+int sum(
+  int * a)
+{
+  register int __comma;
+  int result;
+  int * g_a;
+  int stride;
+  int batsz;
+  int * g_result;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  a[2U] = a[2U] + (int)(1U);
+  cudaMalloc((void **) & g_a, 20U);
+  stride = 1U;
+  batsz = stride * (int)(20U);
+  cudaMemcpy(g_a, a, batsz, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_result, 4U);
+  __comma = foo(a, a);
+  result = __comma;
+  (dimGrid).x = 2U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 2U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  test_sum <<< dimGrid, dimBlock >>>(g_a, g_result);
+  cudaFree(g_a);
+  cudaFree(g_result);
+  return result;
+} /* sum */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int __comma;
+  int x;
+  int i;
+  int(*b)[5LL];
+  
+  __comma = sum((int *) arr);
+  x = __comma;
+  for(i = 0U; i <= (int)(3U); i = i + (int)(1U))
+  {
+    x = (*b)[i] + x;
+  }
+  arr[0U] = 0U;
+  return x;
+} /* main */
+

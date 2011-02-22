@@ -1,0 +1,33 @@
+/* Include standard C library headers */
+
+/* Include CUDA runtime library headers */
+#include <cuda_runtime.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Include builtin types and operators */
+#include "whirl2c.h"
+
+/* Types */
+/* File-level variables and routines */
+int arr[5LL];
+
+int size;
+
+extern int foo(int *, int *);
+
+extern int sum(int *);
+
+extern int sumclone0(int *);
+
+__global__ void test_sum(int *, int *);
+
+__global__ void test_sum_clone0(int *, int *);
+
+#ifdef __cplusplus
+}
+#endif
+
+/* File-level CUDA variables */

@@ -1,0 +1,85 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 08:49:31 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD009.cu.h"
+
+
+__global__ void k_test(
+  int * g_arr,
+  int lbnd)
+{
+  
+  fooclone0(g_arr, lbnd);
+} /* k_test */
+
+
+__device__ int bar(
+  int x)
+{
+  
+  return x + (int)(1U);
+} /* bar */
+
+
+__device__ void fooclone0(
+  int * g_a,
+  int lbnd)
+{
+  register int __comma;
+  
+  __comma = bar(g_a[(int)(9U) - lbnd]);
+  g_a[(int)(9U) - lbnd] = __comma;
+  return;
+} /* fooclone0 */
+
+
+void foo(
+  int * a)
+{
+  register int __comma;
+  
+  __comma = bar(a[9U]);
+  a[9U] = __comma;
+  return;
+} /* foo */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  int arr[10LL];
+  int lbnd;
+  int * g_arr;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  lbnd = argc;
+  if(lbnd < (int)(0U))
+  {
+    lbnd = 0U;
+  }
+  if(lbnd > (int)(9U))
+  {
+    lbnd = 9U;
+  }
+  cudaMalloc((void **) & g_arr, (int)(40U) - (lbnd * (int)(4U)));
+  foo(arr);
+  (dimGrid).x = 2U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 4U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_test <<< dimGrid, dimBlock >>>(g_arr, lbnd);
+  stride = 1U;
+  batsz = (stride * ((int)(10U) - lbnd)) * (int)(4U);
+  cudaMemcpy((lbnd * stride) + arr, g_arr, batsz, cudaMemcpyDeviceToHost);
+  cudaFree(g_arr);
+  return 0U;
+} /* main */
+

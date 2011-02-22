@@ -1,0 +1,32 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 18 22:08:05 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTF006.cu.h"
+
+
+char func(
+  const char * __restrict__ p_c,
+  const char c, ...)
+{
+  
+  return(signed char)(((int)(*p_c) + (int)(c)) + (int)(1U));
+} /* func */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int __comma;
+  char c;
+  
+  c = 49U;
+  __comma = func(&c, 49U);
+  c = __comma;
+  printf1("%d\n", c);
+  printf("%d\n", c);
+  return * (int *)(&c);
+} /* main */
+

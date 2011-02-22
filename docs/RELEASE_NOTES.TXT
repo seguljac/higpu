@@ -1,0 +1,32 @@
+
+******************************************************************************
+**                                                                          **
+**                  RELEASE NOTES OF THE HICUDA COMPILER                    **
+**                                                                          **
+**                      AUTHOR: Tianyi David Han                            **
+**                                                                          **
+******************************************************************************
+
+
+Version 0.9
+----------------
+
+In this release, the hiCUDA compiler is improved in the following two aspects:
+
+1) It can handle larger and more complex C programs, e.g., those that contain
+   many included headers. The generated code is compatible with CUDA compiler
+   (nvcc) 2.2.
+
+2) It is able to recognized more linearized array accesses like a[i*n+j], and
+   promote them to regular array accesses like a[i][j], in order to determine
+   the array data accessed by a kernel more accurately. It also includes many
+   bug fixes in kernel data access analysis.
+
+The compiler is now released in both binary and source versions.
+
+
+Version 0.8
+----------------
+
+Initial release (source only)
+

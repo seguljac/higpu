@@ -1,0 +1,27 @@
+/* Include standard C library headers */
+#include <stdlib.h>
+#include <stdio.h>
+
+/* Include CUDA runtime library headers */
+#include <cuda_runtime.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Include builtin types and operators */
+#include "whirl2c.h"
+
+/* Types */
+/* File-level variables and routines */
+extern long compute(long);
+
+__device__ long computeclone0(long);
+
+__global__ void gpu_compute1(long *);
+
+#ifdef __cplusplus
+}
+#endif
+
+/* File-level CUDA variables */

@@ -1,0 +1,51 @@
+/* Include standard C library headers */
+#include <stdio.h>
+
+/* Include CUDA runtime library headers */
+#include <cuda_runtime.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Include builtin types and operators */
+#include "whirl2c.h"
+
+/* Types */
+struct anonymous4 {
+  double x;
+  double y;
+  double z;
+  double dx;
+  double dy;
+  double dz;
+};
+
+struct anonymous6 {
+  int nodes[4LL];
+};
+
+struct anonymous7 {
+  int id;
+  double x;
+  double y;
+  double z;
+};
+
+struct anonymous8 {
+  int id;
+  double dx;
+  double dy;
+  double dz;
+};
+
+/* File-level variables and routines */
+extern void func1(struct anonymous4 *, struct anonymous6 *, unsigned char *);
+
+extern void func2(struct anonymous7 *, struct anonymous8 *, struct anonymous6 *, struct anonymous4 *);
+
+#ifdef __cplusplus
+}
+#endif
+
+/* File-level CUDA variables */

@@ -1,0 +1,23 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 18 22:02:28 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTF002.cu.h"
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int __comma;
+  register int __comma0;
+  struct pb_Timer timer;
+  
+  __comma = atoi(*argv);
+  (timer).init = (long long)(__comma);
+  __comma0 = atoi(*(argv + 1LL));
+  (timer).elapsed = (long long)(__comma0);
+  return(unsigned int)((timer).init) + (unsigned int)((timer).elapsed);
+} /* main */
+

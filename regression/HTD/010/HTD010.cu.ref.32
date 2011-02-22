@@ -1,0 +1,173 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 10:12:44 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD010.cu.h"
+
+
+__global__ void k_rt012_clone0(
+  float * g_matrix0,
+  int height,
+  int width)
+{
+  int i;
+  int j;
+  int i_init0;
+  int i_end0;
+  int i_step0;
+  int tripcount;
+  int tblk_stride;
+  int j_init0;
+  int j_end0;
+  int j_step0;
+  
+  tripcount = 0U;
+  if((height + -2) >= (int)(1U))
+  {
+    tripcount = height + -2;
+  }
+  tblk_stride = ((tripcount + -1) / (int)(4U)) + (int)(1U);
+  i_init0 = (tblk_stride * (int)((blockIdx).x)) + (int)(1U);
+  i_end0 = (i_init0 + tblk_stride) + -1;
+  if(i_end0 > (height + -2))
+  {
+    i_end0 = height + -2;
+  }
+  i_step0 = 1U;
+  for(i = i_init0; i <= i_end0; i = i + i_step0)
+  {
+    j_init0 = (int)((threadIdx).x) + (int)(1U);
+    j_end0 = width + -2;
+    j_step0 = 4U;
+    for(j = j_init0; j <= j_end0; j = j + j_step0)
+    {
+      g_matrix0[(j + ((width + -1) * (i + -1))) + -1] = (float)(i + j);
+    }
+  }
+} /* k_rt012_clone0 */
+
+
+__global__ void k_rt012(
+  float * g_matrix,
+  int height,
+  int width)
+{
+  int i;
+  int j;
+  int i_init;
+  int i_end;
+  int i_step;
+  int tripcount;
+  int tblk_stride;
+  int j_init;
+  int j_end;
+  int j_step;
+  
+  tripcount = 0U;
+  if((height + -2) >= (int)(1U))
+  {
+    tripcount = height + -2;
+  }
+  tblk_stride = ((tripcount + -1) / (int)(4U)) + (int)(1U);
+  i_init = (tblk_stride * (int)((blockIdx).x)) + (int)(1U);
+  i_end = (i_init + tblk_stride) + -1;
+  if(i_end > (height + -2))
+  {
+    i_end = height + -2;
+  }
+  i_step = 1U;
+  for(i = i_init; i <= i_end; i = i + i_step)
+  {
+    j_init = (int)((threadIdx).x) + (int)(1U);
+    j_end = width + -2;
+    j_step = 4U;
+    for(j = j_init; j <= j_end; j = j + j_step)
+    {
+      * (g_matrix + ((unsigned int)(j) + (unsigned int)(width * i))) = (float)(i + j);
+    }
+  }
+} /* k_rt012 */
+
+
+void foo(
+  float * matrix,
+  int height,
+  int width,
+  float * g_matrix)
+{
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  (dimGrid).x = 4U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 4U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_rt012 <<< dimGrid, dimBlock >>>(g_matrix, height, width);
+  return;
+} /* foo */
+
+
+void fooclone0(
+  float * matrix,
+  int height,
+  int width,
+  float * g_matrix0)
+{
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  (dimGrid).x = 4U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 4U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_rt012_clone0 <<< dimGrid, dimBlock >>>(g_matrix0, height, width);
+  return;
+} /* fooclone0 */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register unsigned int __comma;
+  int n;
+  int m;
+  float * da;
+  float * a_da;
+  float * g_a_da;
+  float * g_a;
+  int stride;
+  int batsz;
+  int iv_0;
+  
+  n = argc;
+  m = argc + (int)(2U);
+  __comma = (unsigned int) malloc((unsigned int)(n * m) * 4U);
+  da = (float *) __comma;
+  a_da = da;
+  cudaMalloc((void **) & g_a_da, (m + -1) * ((n * 4) + -4));
+  cudaMalloc((void **) & g_a, 120);
+  fooclone0(a_da, n, m, g_a_da);
+  foo((float *)(&a), 6U, 5U, g_a);
+  stride = 1;
+  batsz = (stride * (m + -1)) * 4;
+  for(iv_0 = 1U; iv_0 <= (n + -1); iv_0 = iv_0 + 1)
+  {
+    cudaMemcpy(a_da + (stride * ((m * iv_0) + (int)(1U))), g_a_da + (stride * ((m + -1) * (iv_0 + -1))), batsz, cudaMemcpyDeviceToHost);
+  }
+  stride = 1;
+  batsz = stride * 12;
+  for(iv_0 = 1U; iv_0 <= (int)(4U); iv_0 = iv_0 + 1)
+  {
+    cudaMemcpy((void *)(((stride * ((iv_0 * 5) + (int)(1U))) * 4) + (unsigned char *)(a)), g_a + (stride * ((iv_0 * 5) + 1)), batsz, cudaMemcpyDeviceToHost);
+  }
+  cudaFree(g_a_da);
+  cudaFree(g_a);
+  return 0U;
+} /* main */
+

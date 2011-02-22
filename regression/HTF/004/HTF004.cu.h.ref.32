@@ -1,0 +1,102 @@
+/* Include standard C library headers */
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/time.h>
+
+/* Include CUDA runtime library headers */
+#include <cuda_runtime.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Include builtin types and operators */
+#include "whirl2c.h"
+
+/* Types */
+struct anonymous4 {
+  int x;
+  int y;
+  int z;
+};
+
+struct pb_Timer {
+  unsigned int state;
+  unsigned long long elapsed;
+  unsigned long long init;
+};
+
+struct pb_TimerSet {
+  unsigned int current;
+  struct pb_Timer timers[5LL];
+};
+
+struct pb_Parameters {
+  char * outFile;
+  char ** inpFiles;
+  int synchronizeGpu;
+};
+
+struct argparse {
+  int argc;
+  char ** argv;
+  int argn;
+  char ** argv_get;
+  char ** argv_put;
+};
+
+/* File-level variables and routines */
+extern void cpuenergy(struct anonymous4, int, float, int, const float *, float *);
+
+extern int initatoms(float **, int, struct anonymous4, float);
+
+extern int writeenergy(char *, float *, struct anonymous4);
+
+extern struct pb_Parameters * pb_ReadParameters(int *, char **);
+
+extern void pb_InitializeTimerSet(struct pb_TimerSet *);
+
+extern void pb_SwitchToTimer(struct pb_TimerSet *, unsigned int);
+
+extern void pb_PrintTimerSet(struct pb_TimerSet *);
+
+extern void pb_FreeParameters(struct pb_Parameters *);
+
+extern void free_string_array(char **);
+
+extern char ** read_string_array(char *);
+
+extern void initialize_argparse(struct argparse *, int, char **);
+
+extern void finalize_argparse(struct argparse *);
+
+extern void delete_argument(struct argparse *);
+
+extern void next_argument(struct argparse *);
+
+extern int is_end_of_arguments(struct argparse *);
+
+extern char * get_argument(struct argparse *);
+
+extern char * consume_argument(struct argparse *);
+
+extern void accumulate_time(unsigned long long *, unsigned long long, unsigned long long);
+
+extern void pb_ResetTimer(struct pb_Timer *);
+
+extern void pb_StartTimer(struct pb_Timer *);
+
+extern void pb_StopTimer(struct pb_Timer *);
+
+extern double pb_GetElapsedTime(struct pb_Timer *);
+
+__global__ void addVector(float *, float *, struct anonymous4, float *, int, float, int, int);
+
+#ifdef __cplusplus
+}
+#endif
+
+/* File-level CUDA variables */
+__constant__ unsigned int cmem[1024LL];
+

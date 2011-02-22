@@ -1,0 +1,337 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 18 21:40:29 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTB002.cu.h"
+
+
+__global__ void MYKERNEL(
+  float * g_b1,
+  float * g_c1,
+  float * g_d1,
+  int limit_b,
+  int limit_c,
+  int limit_d)
+{
+  int i;
+  int j;
+  float * c_a;
+  int i_init1;
+  int i_end1;
+  int i_step1;
+  int i_init2;
+  int i_end2;
+  int i_step2;
+  int tripcount;
+  int tblk_stride;
+  int j_init0;
+  int j_end0;
+  int j_step0;
+  
+  c_a = (float *)(&cmem);
+  i_init1 = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(16U));
+  i_end1 = limit_b + -1;
+  i_step1 = 160U;
+  for(i = i_init1; i <= i_end1; i = i + i_step1)
+  {
+    g_b1[i] = g_b1[i] + ((float)(i) + c_a[i]);
+  }
+  tripcount = 0U;
+  if((limit_c + -1) >= (int)(0U))
+  {
+    tripcount = limit_c;
+  }
+  tblk_stride = ((tripcount + -1) / (int)(10U)) + (int)(1U);
+  i_init2 = tblk_stride * (int)((blockIdx).x);
+  i_end2 = (i_init2 + tblk_stride) + -1;
+  if(i_end2 > (limit_c + -1))
+  {
+    i_end2 = limit_c + -1;
+  }
+  i_init2 = i_init2 + (int)((threadIdx).x);
+  i_step2 = 16U;
+  for(i = i_init2; i <= i_end2; i = i + i_step2)
+  {
+    g_c1[i] = g_c1[i] + ((float)(i) + (c_a[i] + 1.0F));
+  }
+  tripcount = 0U;
+  if((limit_d + -1) >= (int)(0U))
+  {
+    tripcount = limit_d;
+  }
+  tblk_stride = ((tripcount + -1) / (int)(10U)) + (int)(1U);
+  j_init0 = tblk_stride * (int)((blockIdx).x);
+  j_end0 = (tblk_stride + j_init0) + -1;
+  if(j_end0 > (limit_d + -1))
+  {
+    j_end0 = limit_d + -1;
+  }
+  j_step0 = 1U;
+  for(j = j_init0; j <= j_end0; j = j + j_step0)
+  {
+    g_d1[j] = c_a[j + (int)(1U)] + g_d1[j];
+  }
+} /* MYKERNEL */
+
+
+__global__ void MYKERNEL1(
+  float * g_b0,
+  float * g_c0,
+  float * g_d0)
+{
+  
+  loop_test1(g_b0, g_c0, g_d0, 902U, 901U, 900U);
+} /* MYKERNEL1 */
+
+
+__device__ void loop_test1(
+  float * g_b2,
+  float * g_c2,
+  float * g_d2,
+  int limit_b,
+  int limit_c,
+  int limit_d)
+{
+  int i;
+  int j;
+  int i_init;
+  int i_end;
+  int i_step;
+  int i_init0;
+  int i_end0;
+  int i_step0;
+  int tripcount;
+  int tblk_stride;
+  int j_init;
+  int j_end;
+  int j_step;
+  float * c_a2;
+  
+  c_a2 = ((float *)(&cmem) + 1000LL);
+  i_init = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(16U));
+  i_end = limit_b + -1;
+  i_step = 160;
+  for(i = i_init; i <= i_end; i = i + i_step)
+  {
+    g_b2[i] = g_b2[i] + ((float)(i) + c_a2[i]);
+  }
+  tripcount = 0;
+  if((limit_c + -1) >= (int)(0U))
+  {
+    tripcount = limit_c;
+  }
+  tblk_stride = ((tripcount + -1) / (int)(10U)) + 1;
+  i_init0 = tblk_stride * (int)((blockIdx).x);
+  i_end0 = (i_init0 + tblk_stride) + -1;
+  if(i_end0 > (limit_c + -1))
+  {
+    i_end0 = limit_c + -1;
+  }
+  i_init0 = i_init0 + (int)((threadIdx).x);
+  i_step0 = 16;
+  for(i = i_init0; i <= i_end0; i = i + i_step0)
+  {
+    g_c2[i] = g_c2[i] + ((float)(i) + (c_a2[i] + 1.0F));
+  }
+  tripcount = 0;
+  if((limit_d + -1) >= (int)(0U))
+  {
+    tripcount = limit_d;
+  }
+  tblk_stride = ((tripcount + -1) / (int)(10U)) + 1;
+  j_init = tblk_stride * (int)((blockIdx).x);
+  j_end = (tblk_stride + j_init) + -1;
+  if(j_end > (limit_d + -1))
+  {
+    j_end = limit_d + -1;
+  }
+  j_step = 1;
+  for(j = j_init; j <= j_end; j = j + j_step)
+  {
+    g_d2[j] = c_a2[j + (int)(1U)] + g_d2[j];
+  }
+  return;
+} /* loop_test1 */
+
+
+void loop_test(
+  float * a,
+  float * b,
+  float * c,
+  float * d,
+  int limit_b,
+  int limit_c,
+  int limit_d,
+  float * g_b1,
+  float * g_c1,
+  float * g_d1)
+{
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  (dimGrid).x = 10U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 16U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  MYKERNEL <<< dimGrid, dimBlock >>>(g_b1, g_c1, g_d1, limit_b, limit_c, limit_d);
+  return;
+} /* loop_test */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  int i;
+  float a[1000LL];
+  float b[1000LL];
+  float c[1000LL];
+  float d[1000LL];
+  float b_i;
+  float c_i;
+  float d_i;
+  float b_i0;
+  float c_i0;
+  float d_i0;
+  int stride;
+  int batsz;
+  float * g_b;
+  float * g_c;
+  float * g_d;
+  float * g_b0;
+  float * g_c0;
+  float * g_d0;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  for(i = 0U; i <= (int)(999U); i = i + (int)(1U))
+  {
+    a[i] = 1.0F;
+    d[i] = 2.0F;
+  }
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpyToSymbol("cmem", a, batsz, 0U, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_b, 4000U);
+  cudaMemset(g_b, 0U, 4000U);
+  cudaMalloc((void **) & g_c, 4000U);
+  cudaMemset(g_c, 0U, 4000U);
+  cudaMalloc((void **) & g_d, 4000U);
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(g_d, d, batsz, cudaMemcpyHostToDevice);
+  loop_test((float *) a, b, c, (float *) d, 900U, 901U, 902U, g_b, g_c, g_d);
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(b, g_b, batsz, cudaMemcpyDeviceToHost);
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(c, g_c, batsz, cudaMemcpyDeviceToHost);
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(d, g_d, batsz, cudaMemcpyDeviceToHost);
+  for(i = 0U; i <= (int)(999U); i = i + (int)(1U))
+  {
+    b_i = 0.0F;
+    c_i = 0.0F;
+    d_i = 2.0F;
+    if(i < (int)(900U))
+    {
+      b_i = (float)(i + (int)(1U));
+    }
+    if(i < (int)(901U))
+    {
+      c_i = (float)(i + (int)(2U));
+    }
+    if(i < (int)(902U))
+    {
+      d_i = 3.0F;
+    }
+    if((b)[i] != b_i)
+    {
+      printf("b[%d] is incorrect!\n", i);
+      return 1U;
+    }
+    if((c)[i] != c_i)
+    {
+      printf("c[%d] is incorrect!\n", i);
+      return 1U;
+    }
+    if(d[i] != d_i)
+    {
+      printf("d[%d] is incorrect!\n", i);
+      return 1U;
+    }
+  }
+  for(i = 0U; i <= (int)(999U); i = i + (int)(1U))
+  {
+    a[i] = 1.0F;
+    d[i] = 2.0F;
+  }
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpyToSymbol("cmem", a, batsz, 4000U, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_b0, 4000U);
+  cudaMemset(g_b0, 0U, 4000U);
+  cudaMalloc((void **) & g_c0, 4000U);
+  cudaMemset(g_c0, 0U, 4000U);
+  cudaMalloc((void **) & g_d0, 4000U);
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(g_d0, d, batsz, cudaMemcpyHostToDevice);
+  (dimGrid).x = 10U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 16U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  MYKERNEL1 <<< dimGrid, dimBlock >>>(g_b0, g_c0, g_d0);
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(b, g_b0, batsz, cudaMemcpyDeviceToHost);
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(c, g_c0, batsz, cudaMemcpyDeviceToHost);
+  stride = 1U;
+  batsz = stride * (int)(4000U);
+  cudaMemcpy(d, g_d0, batsz, cudaMemcpyDeviceToHost);
+  for(i = 0U; i <= (int)(999U); i = i + (int)(1U))
+  {
+    b_i0 = 0.0F;
+    c_i0 = 0.0F;
+    d_i0 = 2.0F;
+    if(i < (int)(902U))
+    {
+      b_i0 = (float)(i + (int)(1U));
+    }
+    if(i < (int)(901U))
+    {
+      c_i0 = (float)(i + (int)(2U));
+    }
+    if(i < (int)(900U))
+    {
+      d_i0 = 3.0F;
+    }
+    if((b)[i] != b_i0)
+    {
+      printf("b[%d] is incorrect!\n", i);
+      return 1U;
+    }
+    if((c)[i] != c_i0)
+    {
+      printf("c[%d] is incorrect!\n", i);
+      return 1U;
+    }
+    if(d[i] != d_i0)
+    {
+      printf("d[%d] is incorrect!\n", i);
+      return 1U;
+    }
+  }
+  printf("PASSED\n");
+  return 0U;
+} /* main */
+

@@ -1,0 +1,32 @@
+/*******************************************************
+ * CUDA file generated at Wed Jun 23 16:51:56 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTF005.cu.h"
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  int a[5LL][6LL][7LL];
+  int t[5LL][6LL];
+  struct elem_t * elems;
+  int i;
+  int j;
+  int k;
+  int x;
+  int b;
+  int(*p)[6LL][7LL];
+  
+  x = ((int *)(elems + (unsigned long long)(i)))[j];
+  b = a[(int)(i)][j][k] + x;
+  a[j][k + (int)(1U)][(int)(i)] = b + (int)(1U);
+  b = t[j][k];
+  p = (int(*)[6LL][7LL])((int(*)[5LL][6LL][7LL])(((signed char *) & a) + 168LL));
+  b = *((int *)(p) + ((unsigned long long)(k) + ((unsigned long long)(j) * (unsigned long long)(7U)))) + b;
+  b = *((int *)((int *)((unsigned char *)(p) + (((unsigned long long)(i) * (unsigned long long)(168U)) + ((unsigned long long)(j) * (unsigned long long)(28U))))) + (unsigned long long)(k)) + b;
+  return b;
+} /* main */
+

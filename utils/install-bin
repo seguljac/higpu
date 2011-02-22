@@ -1,0 +1,119 @@
+#!/bin/bash
+#
+# Install the binary version of the hiCUDA compiler.
+#
+# The script takes the installation root of the hiCUDA compiler as
+# the only parameter.
+#
+
+##########################################################################
+# Check prerequisites.
+##########################################################################
+
+# Linux OS
+OS_NAME=`uname -s`
+if [ "${OS_NAME}" != "Linux" ]; then
+    echo
+    echo "*** The OS does not appear to be Linux! Abort."
+    echo
+    exit 1
+fi
+
+# awk and sed
+AWK="awk"
+if [[ ! `type -p ${AWK}` ]]; then
+    echo
+    echo "*** AWK does not exist! Please install it."
+    echo
+    exit 1
+fi
+SED="sed"
+if [[ ! `type -p ${SED}` ]]; then
+    echo
+    echo "*** SED does not exist! Please install it."
+    echo
+    exit 1
+fi
+
+# csh or tcsh
+if [[ ! `type -p csh` && ! `type -p tcsh` ]]; then
+    echo
+    echo "*** CSH (or TCSH) does not exist! Abort."
+    echo
+    exit 1
+fi
+
+##########################################################################
+# Parse the command line.
+##########################################################################
+
+# This script only takes one parameter.
+if [[ $# != 1 ]]; then
+    echo "$0 <hiCUDA compiler installation root>"
+    exit 1
+fi
+
+# Get the absolute installation root.
+HICUDA_ROOT="$1"
+if [[ "${HICUDA_ROOT}" != /* ]]; then
+    HICUDA_ROOT="`pwd`/${HICUDA_ROOT}"
+fi
+
+# Make sure that the installation root directory exists.
+if [[ ! -d "${HICUDA_ROOT}" ]]; then
+    echo
+    echo "*** ${HICUDA_ROOT} does not exist! Abort."
+    echo
+    exit 1
+fi
+
+# Save the current directory path.
+CURR_DIR=`pwd`
+
+# Convert the absolute path into its standard form.
+cd ${HICUDA_ROOT}
+HICUDA_ROOT=`pwd`
+
+# Get the directory that contains this script.
+cd ${CURR_DIR}      # $0 might be a relative path
+cd `dirname $0`
+BIN_ROOT=`pwd`
+
+##########################################################################
+# Install the hiCUDA compiler.
+##########################################################################
+
+export TOOLROOT="${HICUDA_ROOT}"
+
+# Clear the installation root.
+rm -rf ${HICUDA_ROOT}
+
+# Copy the entire directory to the installation root.
+cp -r ${BIN_ROOT} ${HICUDA_ROOT}
+
+BIN_DIR="${BIN_ROOT}/bin"
+HICUDA_BIN_DIR="${HICUDA_ROOT}/bin"
+
+# Configure set-hicuda.sh and set-hicuda.csh
+# Insert the compiler's installation root to the scripts.
+sed "s;##HICUDA_ROOT_STUB##;${HICUDA_ROOT};g" \
+    ${BIN_DIR}/set-hicuda.sh > ${HICUDA_BIN_DIR}/set-hicuda.sh
+sed "s;##HICUDA_ROOT_STUB##;${HICUDA_ROOT};g" \
+    ${BIN_DIR}/set-hicuda.csh > ${HICUDA_BIN_DIR}/set-hicuda.csh
+
+# Remove the script install-bin
+rm ${HICUDA_ROOT}/install-bin
+
+# Set the permission that all files and directories in the installation
+# directory are accessible by everyone.
+chmod -R go=u-w ${HICUDA_ROOT}/*
+
+echo
+echo "===================================================================="
+echo "          Successfully installed the hiCUDA compiler at             "
+echo "              ${HICUDA_ROOT}"
+echo "===================================================================="
+echo
+
+exit 0
+

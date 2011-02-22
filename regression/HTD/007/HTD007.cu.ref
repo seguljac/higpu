@@ -1,0 +1,93 @@
+/*******************************************************
+ * CUDA file generated at Fri Jun 11 08:47:17 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD007.cu.h"
+
+
+__global__ void k_test(
+  float * g_local_arr,
+  float * g_glob_arr,
+  int n)
+{
+  
+  foo(g_local_arr, n, g_glob_arr, n);
+  foo(g_local_arr, n, g_glob_arr, n);
+} /* k_test */
+
+
+__device__ void barclone0(
+  float * g_arr0,
+  float * g_glob_arr1,
+  int n)
+{
+  float __save_expr_temp_0;
+  
+  __save_expr_temp_0 = g_glob_arr1[9];
+  g_arr0[(int)(9U) - n] = __save_expr_temp_0 + __save_expr_temp_0;
+  return;
+} /* barclone0 */
+
+
+__device__ void foo(
+  float * g_arr,
+  int lbnd,
+  float * g_glob_arr0,
+  int n)
+{
+  int i;
+  
+  for(i = lbnd; i <= (int)(9U); i = i + (int)(1U))
+  {
+    g_glob_arr0[i] = g_arr[i - n] + g_glob_arr0[i];
+  }
+  barclone0(g_arr, g_glob_arr0, n);
+  return;
+} /* foo */
+
+
+void bar(
+  float * arr)
+{
+  float __save_expr_temp_0;
+  
+  __save_expr_temp_0 = glob_arr[9U];
+  arr[9U] = __save_expr_temp_0 + __save_expr_temp_0;
+  return;
+} /* bar */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int __comma;
+  float local_arr[10LL];
+  int n;
+  float * g_local_arr;
+  float * g_glob_arr;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  __comma = min(argc, 9U);
+  n = __comma;
+  cudaMalloc((void **) & g_local_arr, (int)(40U) - (n * (int)(4U)));
+  cudaMalloc((void **) & g_glob_arr, 40U);
+  bar(local_arr);
+  (dimGrid).x = 2U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 4U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_test <<< dimGrid, dimBlock >>>(g_local_arr, g_glob_arr, n);
+  stride = 1U;
+  batsz = (stride * ((int)(10U) - n)) * (int)(4U);
+  cudaMemcpy((n * stride) + local_arr, g_local_arr, batsz, cudaMemcpyDeviceToHost);
+  cudaFree(g_local_arr);
+  return 0U;
+} /* main */
+

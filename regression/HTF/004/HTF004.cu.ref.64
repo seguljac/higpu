@@ -1,0 +1,704 @@
+/*******************************************************
+ * CUDA file generated at Mon Jun 21 13:35:55 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTF004.cu.h"
+
+
+__global__ void addVector(
+  float * g_a_atoms,
+  float * g_a_energygrid,
+  struct anonymous4 grid,
+  float * g_gridspacing,
+  int nn,
+  float z,
+  int energygrid_sz,
+  int k)
+{
+  register float __comma0;
+  float energy;
+  float x;
+  float y;
+  int i;
+  int j;
+  int n;
+  float dx;
+  float dy;
+  float dz;
+  float __save_expr_temp_0;
+  int j_init;
+  int j_end;
+  int j_step;
+  int tripcount;
+  int tblk_stride;
+  int i_init;
+  int i_end;
+  int i_step;
+  
+  tripcount = 0U;
+  if(((grid).y + -1) >= (int)(0U))
+  {
+    tripcount = (grid).y;
+  }
+  tblk_stride = ((tripcount + -1) / (int)(64U)) + (int)(1U);
+  j_init = tblk_stride * (int)((blockIdx).y);
+  j_end = (j_init + tblk_stride) + -1;
+  if(j_end > ((grid).y + -1))
+  {
+    j_end = (grid).y + -1;
+  }
+  j_init = j_init + (int)((threadIdx).y);
+  j_step = 8U;
+  for(j = j_init; j <= j_end; j = j + j_step)
+  {
+    y = (float)(j) ** g_gridspacing;
+    tripcount = 0U;
+    if(((grid).x + -1) >= (int)(0U))
+    {
+      tripcount = (grid).x;
+    }
+    tblk_stride = ((tripcount + -1) / (int)(32U)) + (int)(1U);
+    i_init = tblk_stride * (int)((blockIdx).x);
+    i_end = (tblk_stride + i_init) + -1;
+    if(i_end > ((grid).x + -1))
+    {
+      i_end = (grid).x + -1;
+    }
+    i_init = i_init + (int)((threadIdx).x);
+    i_step = 16U;
+    for(i = i_init; i <= i_end; i = i + i_step)
+    {
+      x = (float)(i) ** g_gridspacing;
+      energy = 0.0F;
+      for(n = nn; n < (nn + (int)(4096U)); n = n + (int)(4U))
+      {
+        dx = x - g_a_atoms[n];
+        dy = y - g_a_atoms[n + (int)(1U)];
+        dz = z - g_a_atoms[n + (int)(2U)];
+        __save_expr_temp_0 = ((dx * dx) + (dy * dy)) + (dz * dz);
+        __comma0 = sqrtf(__save_expr_temp_0);
+        energy = energy + (g_a_atoms[n + (int)(3U)] / __comma0);
+      }
+      g_a_energygrid[(i + ((grid).x * j)) + ((grid).y * ((grid).x * k))] = energy;
+    }
+  }
+} /* addVector */
+
+
+void free_string_array(
+  char ** string_array)
+{
+  char ** p;
+  
+  if((unsigned long long)(string_array) == (unsigned long long)(0U))
+  {
+    return;
+  }
+  p = string_array;
+  while((unsigned long long)(*p) != (unsigned long long)(0U))
+  {
+    free(*p);
+    p = p + 1U;
+  }
+  free(string_array);
+  return;
+} /* free_string_array */
+
+
+double pb_GetElapsedTime(
+  struct pb_Timer * timer)
+{
+  double ret;
+  
+  if((timer) -> state != 0U)
+  {
+    fputs("Elapsed time from a running timer is inaccurate\n", stderr);
+  }
+  ret = (double)((timer) -> elapsed) / 1.0e+06;
+  return ret;
+} /* pb_GetElapsedTime */
+
+
+void accumulate_time(
+  unsigned long long * accum,
+  unsigned long long start,
+  unsigned long long end)
+{
+  
+  * accum = *accum + (end - start);
+  return;
+} /* accumulate_time */
+
+
+void pb_StartTimer(
+  struct pb_Timer * timer)
+{
+  struct timeval tv;
+  
+  if((timer) -> state != 0U)
+  {
+    fputs("Ignoring attempt to start a running timer\n", stderr);
+    return;
+  }
+  (timer) -> state = 1U;
+  gettimeofday(&tv, (struct timezone *) 0U);
+  (timer) -> init = (tv).tv_usec + ((tv).tv_sec * (long long)(1000000U));
+  return;
+} /* pb_StartTimer */
+
+
+void pb_StopTimer(
+  struct pb_Timer * timer)
+{
+  unsigned long long fini;
+  struct timeval tv;
+  
+  if((timer) -> state != 1U)
+  {
+    fputs("Ignoring attempt to stop a stopped timer\n", stderr);
+    return;
+  }
+  (timer) -> state = 0U;
+  gettimeofday(&tv, (struct timezone *) 0U);
+  fini = (tv).tv_usec + ((tv).tv_sec * (long long)(1000000U));
+  accumulate_time((unsigned long long *)(void *)((unsigned char *)(timer) + 8U), (timer) -> init, fini);
+  return;
+} /* pb_StopTimer */
+
+
+void pb_ResetTimer(
+  struct pb_Timer * timer)
+{
+  
+  (timer) -> state = 0U;
+  (timer) -> elapsed = 0ULL;
+  return;
+} /* pb_ResetTimer */
+
+
+void finalize_argparse(
+  struct argparse * ap)
+{
+  register unsigned long long preg;
+  register unsigned long long preg0;
+  
+  while((ap) -> argc > (ap) -> argn)
+  {
+    preg = (unsigned long long)((ap) -> argv_get);
+    (ap) -> argv_get = (char **) preg + 1U;
+    preg0 = (unsigned long long)((ap) -> argv_put);
+    (ap) -> argv_put = (char **) preg0 + 1U;
+    * (char **) preg0 = *(char **) preg;
+    (ap) -> argn = (ap) -> argn + (int)(1U);
+  }
+  return;
+} /* finalize_argparse */
+
+
+void next_argument(
+  struct argparse * ap)
+{
+  register unsigned long long preg;
+  register unsigned long long preg0;
+  
+  if((ap) -> argc <= (ap) -> argn)
+  {
+    fprintf(stderr, "next_argument\n");
+  }
+  preg = (unsigned long long)((ap) -> argv_get);
+  (ap) -> argv_get = (char **) preg + 1U;
+  preg0 = (unsigned long long)((ap) -> argv_put);
+  (ap) -> argv_put = (char **) preg0 + 1U;
+  * (char **) preg0 = *(char **) preg;
+  (ap) -> argn = (ap) -> argn + (int)(1U);
+  return;
+} /* next_argument */
+
+
+char ** read_string_array(
+  char * in)
+{
+  register unsigned long long __comma;
+  register unsigned long long __comma0;
+  char ** ret;
+  int i;
+  int count;
+  char * substring;
+  char * substring_end;
+  int substring_length;
+  
+  count = 1U;
+  i = 0U;
+  while((int)(*(i + in)) != (int)(0U))
+  {
+    if((int)(*(i + in)) == (int)(44U))
+    {
+      count = count + (int)(1U);
+    }
+    i = i + (int)(1U);
+  }
+  __comma = (unsigned long long) malloc((unsigned long long)((long long)(count + (int)(1U))) * (unsigned long long)(8U));
+  ret = (char **) __comma;
+  substring = in;
+  for(i = 0U; i < count; i = i + (int)(1U))
+  {
+    substring_end = substring;
+    while(((int)(*substring_end) != (int)(44U)) && ((int)(*substring_end) != (int)(0U)))
+    {
+      substring_end = substring_end + 1U;
+    }
+    substring_length = (int)(substring_end) - (int)(substring);
+    __comma0 = (unsigned long long) malloc((long long)(substring_length + (int)(1U)));
+    * (ret + (unsigned long long)(i)) = (char *) __comma0;
+    memcpy(*(ret + (unsigned long long)(i)), substring, substring_length);
+    * (substring_length + *(ret + (unsigned long long)(i))) = 0U;
+    substring = substring_end + 1U;
+  }
+  * (ret + (unsigned long long)(i)) = (char *)(0ULL);
+  return ret;
+} /* read_string_array */
+
+
+char * consume_argument(
+  struct argparse * ap)
+{
+  register unsigned long long __comma;
+  char * ret;
+  
+  __comma = (unsigned long long) get_argument(ap);
+  ret = (char *) __comma;
+  delete_argument(ap);
+  return ret;
+} /* consume_argument */
+
+
+void delete_argument(
+  struct argparse * ap)
+{
+  
+  if((ap) -> argc <= (ap) -> argn)
+  {
+    fprintf(stderr, "delete_argument\n");
+  }
+  (ap) -> argc = (ap) -> argc + -1;
+  (ap) -> argv_get = (ap) -> argv_get + 1U;
+  return;
+} /* delete_argument */
+
+
+char * get_argument(
+  struct argparse * ap)
+{
+  
+  return * (ap) -> argv_get;
+} /* get_argument */
+
+
+int is_end_of_arguments(
+  struct argparse * ap)
+{
+  
+  return(ap) -> argc == (ap) -> argn;
+} /* is_end_of_arguments */
+
+
+void initialize_argparse(
+  struct argparse * ap,
+  int argc,
+  char ** argv)
+{
+  
+  (ap) -> argc = argc;
+  (ap) -> argn = 0U;
+  (ap) -> argv = argv;
+  (ap) -> argv_put = (ap) -> argv;
+  (ap) -> argv_get = (ap) -> argv_put;
+  return;
+} /* initialize_argparse */
+
+
+void pb_FreeParameters(
+  struct pb_Parameters * p)
+{
+  
+  free((p) -> outFile);
+  free_string_array((p) -> inpFiles);
+  free(p);
+  return;
+} /* pb_FreeParameters */
+
+
+void pb_PrintTimerSet(
+  struct pb_TimerSet * timers)
+{
+  register double __comma3;
+  register double __comma4;
+  register double __comma5;
+  register double __comma6;
+  struct pb_Timer * t;
+  double time;
+  double totTime;
+  
+  t = (struct pb_Timer *)((void *)((unsigned char *)(timers) + 8U));
+  __comma3 = pb_GetElapsedTime(t + 1U);
+  time = __comma3;
+  totTime = time;
+  printf("IO:      %f\n", time);
+  __comma4 = pb_GetElapsedTime(t + 2U);
+  time = __comma4;
+  totTime = time + totTime;
+  printf("GPU:     %f\n", time);
+  __comma5 = pb_GetElapsedTime(t + 3U);
+  time = __comma5;
+  totTime = time + totTime;
+  printf("Copy:    %f\n", time);
+  __comma6 = pb_GetElapsedTime(t + 4U);
+  time = __comma6;
+  totTime = time + totTime;
+  printf("Compute: %f\n", time);
+  printf("Total:   %f\n", totTime);
+  return;
+} /* pb_PrintTimerSet */
+
+
+int writeenergy(
+  char * filename,
+  float * energy,
+  struct anonymous4 volsize)
+{
+  register unsigned long long __comma;
+  register double __comma2;
+  register double __comma3;
+  struct _IO_FILE * outfile;
+  int x;
+  int y;
+  double sum;
+  double t;
+  int addr;
+  
+  __comma = (unsigned long long) fopen(filename, "w");
+  outfile = (struct _IO_FILE *) __comma;
+  if((unsigned long long)(outfile) == (unsigned long long)(0U))
+  {
+    fputs("Cannot open output file\n", stderr);
+    return -1LL;
+  }
+  fprintf(outfile, "%d %d %d %d\n", (volsize).x, (volsize).y, (volsize).z, 40000U);
+  sum = 0.0;
+  for(y = 0U; y < (volsize).y; y = y + (int)(1U))
+  {
+    for(x = 0U; (volsize).x > x; x = x + (int)(1U))
+    {
+      t = (double)(*(energy + (unsigned long long)((long long)(x + ((volsize).x * y)))));
+      __comma2 = fmin(2.0e+01, t);
+      __comma3 = fmax(-2.0e+01, __comma2);
+      t = __comma3;
+      sum = sum + t;
+    }
+  }
+  fprintf(outfile, "%.4g\n", sum);
+  for(y = 0U; y <= (int)(16U); y = y + (int)(1U))
+  {
+    for(x = 0U; (volsize).x > x; x = x + (int)(1U))
+    {
+      addr = x + ((volsize).x * y);
+      fprintf(outfile, "%.4g ", (double)(*(energy + (unsigned long long)(addr))));
+    }
+    fprintf(outfile, "\n");
+  }
+  fclose(outfile);
+  return 0U;
+} /* writeenergy */
+
+
+void cpuenergy(
+  struct anonymous4 grid,
+  int numatoms,
+  float gridspacing,
+  int k,
+  const float * atoms,
+  float * energygrid)
+{
+  float z;
+  int atomarrdim;
+  float atominfo[1024LL];
+  int energygrid_sz;
+  int nn;
+  float * a_energygrid;
+  const float(*a_atoms)[1024LL];
+  int stride;
+  int batsz;
+  int * g_numatoms;
+  float * g_gridspacing;
+  float * g_a_energygrid;
+  float * g_a_atoms;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  atomarrdim = numatoms * (int)(4U);
+  z = (float)(k) * gridspacing;
+  stride = 1U;
+  batsz = stride * (int)(4096U);
+  cudaMemcpyToSymbol("cmem", atominfo, batsz, 0U, cudaMemcpyHostToDevice);
+  energygrid_sz = (grid).z * ((grid).x * (grid).y);
+  a_energygrid = energygrid;
+  a_atoms = (const float(*)[1024LL])(atoms);
+  cudaMalloc((void **) & g_numatoms, 4U);
+  cudaMemcpy(g_numatoms, &numatoms, 4U, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_gridspacing, 4U);
+  cudaMemcpy(g_gridspacing, &gridspacing, 4U, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_a_energygrid, energygrid_sz * (int)(4U));
+  stride = 1U;
+  batsz = (energygrid_sz * stride) * (int)(4U);
+  cudaMemcpy(g_a_energygrid, a_energygrid, batsz, cudaMemcpyHostToDevice);
+  cudaMalloc((void **) & g_a_atoms, 4096U);
+  stride = 1U;
+  batsz = stride * (int)(4096U);
+  cudaMemcpy(g_a_atoms, a_atoms, batsz, cudaMemcpyHostToDevice);
+  for(nn = 0U; atomarrdim > nn; nn = nn + (int)(4096U))
+  {
+    (dimGrid).x = 32U;
+    (dimGrid).y = 64U;
+    (dimGrid).z = 1;
+    (dimBlock).x = 16U;
+    (dimBlock).y = 8U;
+    (dimBlock).z = 1;
+    addVector <<< dimGrid, dimBlock >>>(g_a_atoms, g_a_energygrid, grid, g_gridspacing, nn, z, energygrid_sz, k);
+  }
+  stride = 1U;
+  batsz = (energygrid_sz * stride) * (int)(4U);
+  cudaMemcpy(a_energygrid, g_a_energygrid, batsz, cudaMemcpyDeviceToHost);
+  return;
+} /* cpuenergy */
+
+
+int initatoms(
+  float ** atombuf,
+  int count,
+  struct anonymous4 volsize,
+  float gridspacing)
+{
+  register unsigned long long __comma;
+  register int __comma0;
+  register int __comma1;
+  register int __comma2;
+  register int __comma3;
+  struct anonymous4 size;
+  int i;
+  float * atoms;
+  int addr;
+  double __save_expr_temp_1;
+  
+  srand(54321U);
+  __comma = (unsigned long long) malloc((unsigned long long)((long long)(count * (int)(4U))) * (unsigned long long)(4U));
+  atoms = (float *) __comma;
+  * atombuf = atoms;
+  (size).x = _I4F4TRUNC((float)((volsize).x) * gridspacing);
+  (size).y = _I4F4TRUNC((float)((volsize).y) * gridspacing);
+  (size).z = _I4F4TRUNC((float)((volsize).z) * gridspacing);
+  for(i = 0U; count > i; i = i + (int)(1U))
+  {
+    addr = i * (int)(4U);
+    __comma0 = rand();
+    * (atoms + (unsigned long long)(addr)) = (float)((size).x) * ((float)(__comma0) * 4.6566128731e-10F);
+    __comma1 = rand();
+    * ((atoms + (unsigned long long)(addr)) + 1LL) = (float)((size).y) * ((float)(__comma1) * 4.6566128731e-10F);
+    __comma2 = rand();
+    * ((atoms + (unsigned long long)(addr)) + 2LL) = (float)((size).z) * ((float)(__comma2) * 4.6566128731e-10F);
+    __comma3 = rand();
+    __save_expr_temp_1 = (double)((float)(__comma3) * 4.6566128731e-10F);
+    * ((atoms + (unsigned long long)(addr)) + 3LL) = (float)((__save_expr_temp_1 + __save_expr_temp_1) + -1.0);
+  }
+  return 0U;
+} /* initatoms */
+
+
+void pb_SwitchToTimer(
+  struct pb_TimerSet * timers,
+  unsigned int timer)
+{
+  
+  if((timers) -> current != 0U)
+  {
+    pb_StopTimer((struct pb_Timer *)(void *)((unsigned char *)((void *)((unsigned char *)(timers) + ((unsigned long long)((timers) -> current) * (unsigned long long)(24U)))) + 8U));
+  }
+  (timers) -> current = timer;
+  if(timer != 0U)
+  {
+    pb_StartTimer((struct pb_Timer *)(void *)((unsigned char *)((void *)((unsigned char *)(timers) + ((unsigned long long)(timer) * (unsigned long long)(24U)))) + 8U));
+  }
+  return;
+} /* pb_SwitchToTimer */
+
+
+void pb_InitializeTimerSet(
+  struct pb_TimerSet * timers)
+{
+  int n;
+  
+  (timers) -> current = 0U;
+  for(n = 0U; n <= (int)(4U); n = n + (int)(1U))
+  {
+    pb_ResetTimer((struct pb_Timer *)(void *)((unsigned char *)((void *)((unsigned char *)(timers) + ((unsigned long long)(n) * (unsigned long long)(24U)))) + 8U));
+  }
+  return;
+} /* pb_InitializeTimerSet */
+
+
+struct pb_Parameters * pb_ReadParameters(
+  int * _argc,
+  char ** argv)
+{
+  register unsigned long long __comma;
+  register unsigned long long __comma0;
+  register int __comma8;
+  register unsigned long long __comma1;
+  register int __comma2;
+  register unsigned long long __comma3;
+  register unsigned long long __comma4;
+  register int __comma5;
+  register unsigned long long __comma6;
+  register unsigned long long __comma7;
+  char * err_message;
+  struct argparse ap;
+  struct pb_Parameters * ret;
+  char * arg;
+  
+  __comma = (unsigned long long) malloc(24U);
+  ret = (struct pb_Parameters *) __comma;
+  (ret) -> outFile = (char *)(0ULL);
+  __comma0 = (unsigned long long) malloc(8U);
+  (ret) -> inpFiles = (char **) __comma0;
+  * (ret) -> inpFiles = (char *)(0ULL);
+  (ret) -> synchronizeGpu = 0U;
+  initialize_argparse(&ap, *_argc, argv);
+  __comma8 = is_end_of_arguments(&ap);
+  while(__comma8 == (int)(0U))
+  {
+    __comma1 = (unsigned long long) get_argument(&ap);
+    arg = (char *) __comma1;
+    if((((int)(*arg) == (int)(45U)) && ((int)(*(arg + 1LL)) != (int)(0U))) && ((int)(*(arg + 2LL)) == (int)(0U)))
+    {
+      delete_argument(&ap);
+      if((int)(*(arg + 1LL)) == (int)(111U))
+        goto _1;
+      if((int)(*(arg + 1LL)) == (int)(105U))
+        goto _4;
+      if((int)(*(arg + 1LL)) == (int)(83U))
+        goto _5;
+      if((int)(*(arg + 1LL)) == (int)(45U))
+        goto _6;
+      goto _8;
+      _1 :;
+      __comma2 = is_end_of_arguments(&ap);
+      if(__comma2 != (int)(0U))
+      {
+        err_message = (char *)("Expecting file name after \'-o\'\n");
+        goto _2;
+      }
+      free((ret) -> outFile);
+      __comma3 = (unsigned long long) consume_argument(&ap);
+      __comma4 = (unsigned long long) strdup((char *) __comma3);
+      (ret) -> outFile = (char *) __comma4;
+      goto _3;
+      _4 :;
+      __comma5 = is_end_of_arguments(&ap);
+      if(__comma5 != (int)(0U))
+      {
+        err_message = (char *)("Expecting file name after \'-i\'\n");
+        goto _2;
+      }
+      __comma6 = (unsigned long long) consume_argument(&ap);
+      __comma7 = (unsigned long long) read_string_array((char *) __comma6);
+      (ret) -> inpFiles = (char **) __comma7;
+      goto _3;
+      _5 :;
+      (ret) -> synchronizeGpu = 1U;
+      goto _3;
+      _6 :;
+      goto _7;
+      _8 :;
+      err_message = (char *)("Unexpected command-line parameter\n");
+      goto _2;
+      _3 :;
+    }
+    else
+    {
+      next_argument(&ap);
+    }
+    __comma8 = is_end_of_arguments(&ap);
+  }
+  _7 :;
+  * _argc = (ap).argc;
+  finalize_argparse(&ap);
+  return ret;
+  _2 :;
+  fputs(err_message, stderr);
+  pb_FreeParameters(ret);
+  return(struct pb_Parameters *) 0U;
+} /* pb_ReadParameters */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register unsigned long long __comma;
+  register int __comma0;
+  register unsigned long long __comma1;
+  register int __comma2;
+  struct pb_TimerSet timers;
+  struct pb_Parameters * parameters;
+  float * energy;
+  float * atoms;
+  struct anonymous4 volsize;
+  int volmemsz;
+  
+  atoms = (float *)(0U);
+  printf("CUDA accelerated coulombic potential microbenchmark\n");
+  printf("Original version by John E. Stone <johns@ks.uiuc.edu>\n");
+  printf("This version maintained by Chris Rodrigues\n");
+  __comma = (unsigned long long) pb_ReadParameters(&argc, argv);
+  parameters = (struct pb_Parameters *) __comma;
+  if((unsigned long long)(parameters) == (unsigned long long)(0U))
+  {
+    return -1LL;
+  }
+  if((unsigned long long)(*(parameters) -> inpFiles) != (unsigned long long)(0U))
+  {
+    fputs("No input files expected\n", stderr);
+    return -1LL;
+  }
+  pb_InitializeTimerSet(&timers);
+  pb_SwitchToTimer(&timers, 4U);
+  (volsize).x = 512U;
+  (volsize).y = 512U;
+  (volsize).z = 1U;
+  __comma0 = initatoms(&atoms, 40000U, volsize, 1.0000000149e-01F);
+  if(__comma0 != (int)(0U))
+  {
+    return -1LL;
+  }
+  volmemsz = 1048576U;
+  __comma1 = (unsigned long long) malloc(volmemsz);
+  energy = (float *) __comma1;
+  cpuenergy(volsize, 40000U, 1.0000000149e-01F, 0U, atoms, energy);
+  pb_SwitchToTimer(&timers, 1U);
+  if((unsigned long long)((parameters) -> outFile) != (unsigned long long)(0U))
+  {
+    __comma2 = writeenergy((parameters) -> outFile, energy, volsize);
+    if(__comma2 == -1)
+    {
+      return -1LL;
+    }
+  }
+  pb_SwitchToTimer(&timers, 4U);
+  free(atoms);
+  free(energy);
+  pb_SwitchToTimer(&timers, 0U);
+  pb_PrintTimerSet(&timers);
+  pb_FreeParameters(parameters);
+  return 0U;
+} /* main */
+

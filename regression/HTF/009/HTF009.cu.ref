@@ -1,0 +1,44 @@
+/*******************************************************
+ * CUDA file generated at Thu Jun 24 16:37:26 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTF009.cu.h"
+
+
+void func2(
+  struct anonymous7 * nodes,
+  struct anonymous8 * disps,
+  struct anonymous6 * elements,
+  struct anonymous4 * node_disps)
+{
+  
+  return;
+} /* func2 */
+
+
+void func1(
+  struct anonymous4 * node_disps,
+  struct anonymous6 * elements,
+  unsigned char * mask)
+{
+  
+  return;
+} /* func1 */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  struct anonymous7 * nodes;
+  struct anonymous8 * disps;
+  struct anonymous4 * node_disps;
+  struct anonymous6 * elements;
+  unsigned char * mask;
+  
+  func1(node_disps, elements, mask);
+  func2(nodes, disps, elements, node_disps);
+  return 0U;
+} /* main */
+

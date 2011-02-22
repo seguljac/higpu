@@ -1,0 +1,50 @@
+/*******************************************************
+ * CUDA file generated at Sun Jul 11 08:59:11 2010
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTD015.cu.h"
+
+
+__global__ void k_test(
+  long * g_arr,
+  long f_n2,
+  long n4)
+{
+  int i;
+  
+  i = (int)((threadIdx).x) + ((int)((blockIdx).x) * (int)(10U));
+  g_arr[i] = g_arr[i] + (f_n2 + ((long long)(i) + n4));
+} /* k_test */
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  static long arr[10LL];
+  static long n4;
+  long * g_arr;
+  int stride;
+  int batsz;
+  struct dim3 dimGrid;
+  struct dim3 dimBlock;
+  
+  n2 = n3;
+  cudaMalloc((void **) & g_arr, 80U);
+  cudaMemset(g_arr, 0U, 80U);
+  (dimGrid).x = 1U;
+  (dimGrid).y = 1;
+  (dimGrid).z = 1;
+  (dimBlock).x = 10U;
+  (dimBlock).y = 1;
+  (dimBlock).z = 1;
+  k_test <<< dimGrid, dimBlock >>>(g_arr, n2, n4);
+  stride = 1U;
+  batsz = stride * (int)(80U);
+  cudaMemcpy(arr, g_arr, batsz, cudaMemcpyDeviceToHost);
+  cudaFree(g_arr);
+  printf("%d\n", arr[3U]);
+  return 0U;
+} /* main */
+

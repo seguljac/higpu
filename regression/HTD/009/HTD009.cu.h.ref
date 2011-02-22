@@ -1,0 +1,27 @@
+/* Include standard C library headers */
+
+/* Include CUDA runtime library headers */
+#include <cuda_runtime.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Include builtin types and operators */
+#include "whirl2c.h"
+
+/* Types */
+/* File-level variables and routines */
+__device__ int bar(int);
+
+extern void foo(int *);
+
+__device__ void fooclone0(int *, int);
+
+__global__ void k_test(int *, int);
+
+#ifdef __cplusplus
+}
+#endif
+
+/* File-level CUDA variables */
