@@ -1237,7 +1237,7 @@ do_pragma (cpp_reader *pfile)
 /** DAVID CODE BEGIN **/
         // Enable macro expansion in hiCUDA pragmas.
         bool is_hicuda_pragma =
-            (strcmp(token->val.node->ident.str, "hicuda") == 0);
+            (strcmp(token->val.node->ident.str, "higpu") == 0);
         if (is_hicuda_pragma) pfile->state.prevent_expansion--;
 /*** DAVID CODE END ***/
         _cpp_backup_tokens(pfile, count);

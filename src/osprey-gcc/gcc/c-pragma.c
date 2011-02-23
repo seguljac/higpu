@@ -703,7 +703,7 @@ init_pragma (void)
 /** DAVID CODE BEGIN **/
 
 #ifdef HANDLE_PRAGMA_HICUDA
-    c_register_pragma_with_expansion(0, "hicuda", handle_pragma_hicuda);
+    c_register_pragma_with_expansion(0, "higpu", handle_pragma_hicuda);
 #endif  /* HANDLE_PRAGMA_HICUDA */
 
 /*** DAVID CODE END ***/

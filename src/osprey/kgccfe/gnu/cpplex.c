@@ -885,8 +885,8 @@ _cpp_pragma_token(cpp_reader *pfile) {
 
 /** DAVID CODE BEGIN **/
     // Check for keyword "hicuda".
-    len = strlen("hicuda");
-    if ((rlimit - c) >= len && memcmp(c, "hicuda", len) == 0) {
+    len = strlen("higpu");
+    if ((rlimit - c) >= len && memcmp(c, "higpu", len) == 0) {
         // Found #pragma hicuda.
         current_pragma = PT_HICUDA;
         return _cpp_lex_direct(pfile);

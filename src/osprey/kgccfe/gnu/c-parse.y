@@ -4437,7 +4437,7 @@ static int check_hicuda_string(char *s, bool *status)
         return 0;
     }
 
-    if (strcmp(s, "hicuda") == 0) return PRAGMA_HICUDA;
+    if (strcmp(s, "higpu") == 0) return PRAGMA_HICUDA;
 
     if (strcmp(s, "kernel") == 0) return HC_KERNEL_START;
     if (strcmp(s, "kernel_end") == 0) return HC_KERNEL_END;
