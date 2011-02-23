@@ -61,7 +61,7 @@ fi
 
 # This script only takes one parameter.
 if [[ $# != 1 ]]; then
-    echo "$0 <hiCUDA compiler installation root>"
+    echo "$0 <hiGPU compiler installation root>"
     exit 1
 fi
 
@@ -156,7 +156,7 @@ chmod -R go=u-w ${HICUDA_ROOT}/*
 
 echo
 echo "===================================================================="
-echo "          Successfully installed the hiCUDA compiler at             "
+echo "          Successfully installed the hiGPU compiler at             "
 echo "              ${HICUDA_ROOT}"
 echo "===================================================================="
 echo

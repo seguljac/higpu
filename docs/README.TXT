@@ -1,12 +1,12 @@
 
-This document describes how to build, install, configure and use the hiCUDA
+This document describes how to build, install, configure and use the hiGPU
 compiler. The release note of the compiler is in "docs/RELEASE_NOTES".
 
 
 1. Prerequisites
 ----------------------------------------------------------------------------
 
-The hiCUDA compiler requires a Linux operating system, and has been tested on
+The hiGPU compiler requires a Linux operating system, and has been tested on
 the following variants:
 
 - Ubuntu 7.10 (64-bit)
@@ -15,13 +15,13 @@ the following variants:
 - Debian 5.0.3 (64-bit)
 - Red Hat Enterprise Linux 5.5 (32-bit)
 
-Before using the hiCUDA compiler, please make sure that the following tools
+Before using the hiGPU compiler, please make sure that the following tools
 are installed on the system:
 
 - Awk and sed
 - Bash and csh (or tcsh)
 
-If you want to build the hiCUDA compiler from the source tree, you need
+If you want to build the hiGPU compiler from the source tree, you need
 additional tools:
 
 - GCC 4.1
@@ -30,15 +30,15 @@ additional tools:
   - If the OS is 64-bit, install the following additional packages
     (for buidling 32-bit binaries):
     - ia32-libs, libc6-dev-i386, gcc-4.1-multilib, g++-4.1-multilib
-  - NOTE: GCC 4.2 cannot be used to build the hiCUDA compiler!
+  - NOTE: GCC 4.2 cannot be used to build the hiGPU compiler!
 - GNU Make
 - Flex and Bison
 
 
-2. Building and installing the hiCUDA compiler
+2. Building and installing the hiGPU compiler
 ----------------------------------------------------------------------------
 
-If you downloaded the binary release of the hiCUDA compiler, just execute the
+If you downloaded the binary release of the hiGPU compiler, just execute the
 following command to install it at <install root>:
 
 $ ./install-bin <install root>
@@ -46,44 +46,44 @@ $ ./install-bin <install root>
 Note that if the install root requires root privilege, add "sudo" before the
 install command.
 
-If you downloaded the source release of the hiCUDA compiler and want to build
+If you downloaded the source release of the hiGPU compiler and want to build
 and install it at <install root>, just execute the following two commands:
 
 $ <source root>/utils/build
 $ <source root>/utils/install <install root>
 
 
-3. Configuring the environment for the hiCUDA compiler
+3. Configuring the environment for the hiGPU compiler
 ----------------------------------------------------------------------------
 
-The scripts that set and clear up the environment for the hiCUDA compiler are
+The scripts that set and clear up the environment for the hiGPU compiler are
 
-        <install root>/bin/set-hicuda.[sh|csh]
-        <install root>/bin/unset-hicuda.[sh|csh]
+        <install root>/bin/set-higpu.[sh|csh]
+        <install root>/bin/unset-higpu.[sh|csh]
 
 respectively. Note that both scripts must be invoked using "source".
 
-For example, assuming that you installed the hiCUDA compiler at /opt/hicuda.
+For example, assuming that you installed the hiGPU compiler at /opt/higpu.
 You must execute the following command in a bash shell before using the
 compiler:
 
-$ source /opt/hicuda/bin/set-hicuda.sh
+$ source /opt/higpu/bin/set-higpu.sh
 
 Note that this command only needs to be invoked once when you start a new
 shell. To avoid doing this manually, put the following lines in your login
 script (e.g., .bashrc for bash shell):
 
-# hiCUDA environment
-HICUDA_STARTUP=<install root>/bin/set-hicuda
-if [ -f "${HICUDA_STARTUP}" ]; then
-    source ${HICUDA_STARTUP}
+# hiGPU environment
+HIGPU_STARTUP=<install root>/bin/set-higpu
+if [ -f "${HIGPU_STARTUP}" ]; then
+    source ${HIGPU_STARTUP}
 fi
 
 
 4. Running regression tests
 ----------------------------------------------------------------------------
 
-The regression test suite for the hiCUDA compiler is located at:
+The regression test suite for the hiGPU compiler is located at:
 - <install root>/regression if you downloaded the binary release
 - <source root>/regression if you downloaded the source release
 
@@ -94,13 +94,13 @@ $ cd <install root>/regression
 $ ./run-all.sh
 
 
-5. Using the hiCUDA compiler
+5. Using the hiGPU compiler
 ----------------------------------------------------------------------------
 
-The hiCUDA compiler has the following command-line interface
-(obtained by executing "hicuda" at the command line):
+The hiGPU compiler has the following command-line interface
+(obtained by executing "higpu" at the command line):
 
-hicuda [-o <base name>] [-I<include path>]* [-m32|-m64] [-keep] [-v] \
+higpu [-o <base name>] [-I<include path>]* [-m32|-m64] [-keep] [-v] [-opencl] \
     <input file(s)>
 
 -o:     input program base name that is used to name the generated output
@@ -125,14 +125,26 @@ hicuda [-o <base name>] [-I<include path>]* [-m32|-m64] [-keep] [-v] \
         two global trace files: <base_name>.ipa.t and <base_name>.w2c.t.
         (for producing a bug report)
 
-The hiCUDA compiler accepts one or more input files. If the base name is
-"foo", it will create a new folder named "foo.cuda" in the current directory,
-and generate the following files in this folder:
+-opencl generate OpenCL files instead of CUDA files
 
-foo.cu:     the CUDA program
-foo.cu.h:   the header file
-whirl2c.h:  internal header file included in foo.cu.h
+The hiGPU compiler accepts one or more input files. If the base name is
+"foo", it will create a new folder named "foo.cuda" (for CUDA backend) 
+or "foo.opencl" (for OpenCL backend) in the current directory,
+and generate the following files in these folders:
 
+foo.cuda:
+  foo.cu:     the CUDA program
+  foo.cu.h:   the header file
+  whirl2c.h:  internal header file included in foo.cu.h
+
+### FIX_THIS ###
+foo.opencl:
+  foo.cpp:    the openCL program
+  foo.cu.h:   the header file
+  kernels.cl: the openCL kernels
+  whirl2c.h:  internal header file included in foo.cu.h
+
+### FIX_THIS ###
 foo.cu can then be used in normal CUDA compilation:
 
 $ nvcc foo.cu
