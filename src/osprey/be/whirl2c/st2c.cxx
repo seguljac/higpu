@@ -82,6 +82,8 @@ static char *rcs_id = "$Source: /proj/osprey/CVS/open64/osprey1.0/be/whirl2c/st2
 #include "ty2c.h"
 #include "init2c.h"
 
+extern BOOL W2C_Emit_OpenCL;
+extern int openCL_in_kernel_code;
 
 /*--------- General purpose macros to get ST attributes ---------------*/
 /*---------------------------------------------------------------------*/
@@ -493,29 +495,63 @@ ST2C_basic_decl(TOKEN_BUFFER tokens, const ST *st, CONTEXT context)
 
 /** DAVID CODE BEGIN **/
     if (ST_sym_class(st) == CLASS_VAR) {
-        ST_IDX st_idx = ST_st_idx(st);
-        if (st_attr_is_shared_var(st_idx)) {
+      ST_IDX st_idx = ST_st_idx(st);
+      if (W2C_Emit_OpenCL){
+	if (openCL_in_kernel_code){
+	  if (st_attr_is_global_var(st_idx)) {
+	    // a variable in global memory
+ 	    Prepend_Token_String(decl_tokens, "__global"); 
+	  } else if (st_attr_is_shared_var(st_idx)) {
+	    // a variable in shared memory
+	    Prepend_Token_String(decl_tokens, "__local"); 
+	  } else if (st_attr_is_const_var(st_idx)) {
+	    // a variable in constant memory
+	    Prepend_Token_String(decl_tokens, "__constant");
+	  }  else {
+	    if (TY_Is_Pointer(ST_type(st))){ 
+	      // Default for OpenCL: all pointers point to global memory 
+	      Prepend_Token_String(decl_tokens, "__global"); 
+	    }
+	  }
+	}
+      } else {
+	if (ST_sym_class(st) == CLASS_VAR) {
+	  ST_IDX st_idx = ST_st_idx(st);
+	  if (st_attr_is_shared_var(st_idx)) {
             // a variable in shared memory
             Prepend_Token_String(decl_tokens, "__shared__");
-        } else if (st_attr_is_const_var(st_idx)) {
+	  } else if (st_attr_is_const_var(st_idx)) {
             // a variable in constant memory
             Prepend_Token_String(decl_tokens, "__constant__");
-        }
+	  }
+	}
+      }
     }
 
     if (!Stab_No_Linkage(st)) {
         if (ST_sym_class(st) == CLASS_FUNC
                 && PU_is_kernel(Pu_Table[ST_pu(st)])) {
             // kernel function declaration
-            Prepend_Token_String(decl_tokens, "__global__");
+	  if (W2C_Emit_OpenCL){ 
+	    Prepend_Token_String(decl_tokens, "__kernel"); 
+	  }  else {
+	    Prepend_Token_String(decl_tokens, "__global__");
+	  }
         } else if (ST_sym_class(st) == CLASS_FUNC
                 && PU_is_device(Pu_Table[ST_pu(st)])) {
             // device function declaration
-            Prepend_Token_String(decl_tokens, "__device__");
+	  if (W2C_Emit_OpenCL){  
+	  } else {
+	    Prepend_Token_String(decl_tokens, "__device__");
+	  }
         } else if (ST_sym_class(st) == CLASS_FUNC &&
                    PU_is_inline_function(Pu_Table[ST_pu(st)])) {
             // inline function
-	        Prepend_Token_String(decl_tokens, "__inline");
+	  if (W2C_Emit_OpenCL){  
+	    Prepend_Token_String(decl_tokens, "inline");
+	  } else {
+	    Prepend_Token_String(decl_tokens, "__inline");
+	  }
         } else {
             // static, extern declaration
             switch (ST_sclass(st)) {
@@ -673,7 +709,20 @@ static void
 ST2C_use_func(TOKEN_BUFFER tokens, const ST *st, CONTEXT context)
 {
    Is_True(ST_sym_class(st)==CLASS_FUNC, ("expected CLASS_FUNC ST"));
-   Append_Token_String(tokens, W2CF_Symtab_Nameof_St(st));
+   if (W2C_Emit_OpenCL && openCL_in_kernel_code){ 
+     // When cosf, sinf and sqrtf used in kernel, rename to cos, sin and sqrt, respectively.
+     if (!strcmp(W2CF_Symtab_Nameof_St(st), "cosf")){
+       Append_Token_String(tokens, "cos");
+     } else if (!strcmp(W2CF_Symtab_Nameof_St(st), "sinf")){
+       Append_Token_String(tokens, "sin");
+     } else if (!strcmp(W2CF_Symtab_Nameof_St(st), "sqrtf")){
+       Append_Token_String(tokens, "sqrt");
+     } else {
+       Append_Token_String(tokens, W2CF_Symtab_Nameof_St(st));
+     }
+   } else {
+     Append_Token_String(tokens, W2CF_Symtab_Nameof_St(st));
+   }
    if (!Stab_External_Def_Linkage(st))
       Set_BE_ST_w2fc_referenced(st);
 } /* ST2C_use_func */
@@ -787,6 +836,13 @@ ST2C_func_header(TOKEN_BUFFER  tokens,
    INT          param, first_param;
    TY_IDX       funtype = ST_pu_type(st);
    BOOL         has_prototype = TY_has_prototype(funtype);
+
+   // Recognize that We are in kernel code
+   if (PU_is_kernel(Pu_Table[ST_pu(st)])) {
+     openCL_in_kernel_code = 1;
+   } else {
+     openCL_in_kernel_code = 0;
+   }
    
    Is_True((ST_sclass(st) == SCLASS_TEXT  
      || ST_sclass(st) == SCLASS_EXTERN) && TY_Is_Function(funtype),
@@ -872,14 +928,20 @@ ST2C_func_header(TOKEN_BUFFER  tokens,
    if (ST_sclass(st) == SCLASS_FSTATIC)
       Prepend_Token_String(header_tokens, "static");
 
-/** DAVID CODE BEGIN **/
-    if (PU_is_kernel(Pu_Table[ST_pu(st)])) {
-        Prepend_Token_String(header_tokens, "__global__");
-    } else if (PU_is_device(Pu_Table[ST_pu(st)])) {
-        Prepend_Token_String(header_tokens, "__device__");
-    }
+   /** DAVID CODE BEGIN **/
+   if (W2C_Emit_OpenCL){ 
+     if (PU_is_kernel(Pu_Table[ST_pu(st)])) {
+       Prepend_Token_String(header_tokens, "__kernel");
+     }
+   } else {
+     if (PU_is_kernel(Pu_Table[ST_pu(st)])) {
+       Prepend_Token_String(header_tokens, "__global__");
+     } else if (PU_is_device(Pu_Table[ST_pu(st)])) {
+       Prepend_Token_String(header_tokens, "__device__");
+     }
+   }
 /*** DAVID CODE END ***/
-
+   
    Append_And_Reclaim_Token_List(tokens, &header_tokens);
 } /* ST2C_func_header */
 
