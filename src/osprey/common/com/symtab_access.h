@@ -1349,6 +1349,36 @@ Clear_TY_is_cuda_runtime(TY_IDX tyi) {
     Clear_TY_is_cuda_runtime(Ty_Table[tyi]);
 }
 
+inline BOOL
+TY_is_used_in_kernel(const TY& ty) {
+    return ty.flags & TY_IS_USED_IN_KERNEL;
+}
+
+inline void
+Set_TY_is_used_in_kernel(TY& ty) {
+    ty.flags |= TY_IS_USED_IN_KERNEL;
+}
+
+inline void
+Clear_TY_is_used_in_kernel(TY& ty) {
+    ty.flags &= ~TY_IS_USED_IN_KERNEL;
+}
+
+inline BOOL
+TY_is_used_in_kernel(const TY_IDX tyi) {
+  return TY_is_used_in_kernel(Ty_Table[tyi]);
+}
+
+inline void
+Set_TY_is_used_in_kernel(TY_IDX tyi) {
+    Set_TY_is_used_in_kernel(Ty_Table[tyi]);
+}
+
+inline void
+Clear_TY_is_used_in_kernel(TY_IDX tyi) {
+    Clear_TY_is_used_in_kernel(Ty_Table[tyi]);
+}
+
 /*** DAVID CODE END ***/
 
 // TY pu_flags

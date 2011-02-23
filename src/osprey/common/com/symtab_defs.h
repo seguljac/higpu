@@ -525,7 +525,8 @@ enum TY_FLAGS
                                         // arguments.
 #endif
 /** DAVID CODE BEGIN **/
-    TY_IS_CUDA_RUNTIME = 0x4000     /* a type declared in cuda_runtime.h */
+    TY_IS_CUDA_RUNTIME = 0x4000,     /* a type declared in cuda_runtime.h */
+    TY_IS_USED_IN_KERNEL = 0x8000    /* a type used inside a kernel */
 /*** DAVID CODE END ***/
 };
 

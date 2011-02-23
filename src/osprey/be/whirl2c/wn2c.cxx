@@ -2569,9 +2569,6 @@ static void WN2C_Append_Symtab_Types(TOKEN_BUFFER tokens,
 	// to the kernel header file
 	if (W2C_Emit_OpenCL){
 	  if (tokens != NULL) {
-	    // Never happend during testing
-	    // Not implemented
-	    assert(0);
 	    Append_And_Reclaim_Token_List(tokens, &tmp_tokens);
 	  } else {
 	    char str_buf[10000];
@@ -2681,12 +2678,15 @@ WN2C_Append_Symtab_Vars(TOKEN_BUFFER tokens,
         ST_CLASS sc = ST_sym_class(st);
         ST_SCLASS ssc = ST_sclass(st);
 
-        // Do not define constant/shared memory variables here
-        // because we are still in the scope of extern "C".
+        // For CUDA (not for OpenCL), do not define constant/shared memory 
+	// variables here because we are still in the scope of extern "C".
         if (sc == CLASS_VAR)
         {
+	  if (W2C_Emit_OpenCL){
+	  } else { 
             if (st_attr_is_const_var(st_idx)) continue;
             if (st_attr_is_shared_var(st_idx)) continue;
+	  }
         }
 
         if (ST_is_not_used(st)) continue;
@@ -2717,9 +2717,6 @@ WN2C_Append_Symtab_Vars(TOKEN_BUFFER tokens,
 	    // to the kernel header file	    
 	    if (W2C_Emit_OpenCL){
 	      if (tokens != NULL) {
-		// Never happend during testing
-		// Not implemented
-		assert(0);
 		Append_And_Reclaim_Token_List(tokens, &tmp_tokens);
 	      } else {
 		char str_buf[10000];
@@ -3742,8 +3739,23 @@ WN2C_unaryop(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context)
 } /* WN2C_unaryop */
 
 
+static STATUS 
+WN2C_func_entry_original(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context);
+
+// Redirect kernel code to kernel tokens
 static STATUS
 WN2C_func_entry(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context)
+{
+  if ((W2C_Emit_OpenCL && PU_is_kernel(Pu_Table[ST_pu(WN_st(wn))]))
+      || (W2C_Emit_OpenCL && PU_is_device(Pu_Table[ST_pu(WN_st(wn))]))){
+    return WN2C_func_entry_original(kernel_tokens, wn, context);
+  } else {
+    return WN2C_func_entry_original(tokens, wn, context);
+  }
+}
+
+static STATUS
+WN2C_func_entry_original(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context)
 {
    /* Add tokens for the function header and body to "tokens".  Note
     * that all the tokens will be added to the buffer, while the task
@@ -3905,6 +3917,17 @@ WN2C_block(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context)
    {
       Append_Cplus_Initialization(stmt_tokens, context);
    }
+
+   // Insert clInit call at the beginning of main function
+   if (W2C_Emit_OpenCL){
+     if (new_func_scope &&
+	 (PU_is_mainpu(Pu_Table[ST_pu(PUINFO_FUNC_ST)]) || 
+	  strcmp(ST_name(PUINFO_FUNC_ST), "main") == 0))
+       {
+	 Append_Token_String(stmt_tokens, "clInit(&__cl_context, &__cl_queue, &__cl_program);\n");
+       }
+   }
+
    CONTEXT_set_top_level_expr(context);
    if (WN_first(wn) != NULL)
       WN2C_Translate_Stmt_Sequence(
