@@ -87,6 +87,10 @@ static char *rcs_id = "$Source: /proj/osprey/CVS/open64/osprey1.0/be/whirl2c/w2c
  */
 #undef int
 
+// A buffer which holds all the code for kernel source file
+TOKEN_BUFFER kernel_tokens;
+// A flag which determines if we are processing kernel code or not
+int openCL_in_kernel_code;
 
 /* ====================================================================
  *
@@ -1384,11 +1388,23 @@ W2C_Outfile_Translate_Pu(WN *pu, BOOL emit_global_decls)
    if (!pu_is_pushed)
       W2C_Push_PU(pu, WN_func_body(pu));
 
+   // Initialize the kernel token buffer
+   if (W2C_Emit_OpenCL){
+       kernel_tokens = New_Token_Buffer();
+   }
+
    tokens = New_Token_Buffer();
    (void)WN2C_translate(tokens, pu, Global_Context);
    Write_And_Reclaim_Tokens(W2C_File[W2C_DOTC_FILE], 
 			    W2C_File[W2C_LOC_FILE], 
 			    &tokens);
+
+   // Dump kernel token buffer to the kernel source file
+   if (W2C_Emit_OpenCL){
+     Write_And_Reclaim_Tokens(W2C_File[W2C_CL_FILE], 
+			      W2C_File[W2C_LOC_FILE], 
+			      &kernel_tokens);
+   }
 
    if (!pu_is_pushed)
       W2C_Pop_PU();
