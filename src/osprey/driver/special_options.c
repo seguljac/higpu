@@ -293,6 +293,10 @@ add_special_options (void)
     if (option_was_seen(O_mhc))
     {
         add_phase_for_option(O_mhc, P_c_gfe);
+	if (option_was_seen(O_opencl)){
+	  flag = add_new_option("-opencl");
+	  prepend_option_seen(flag);
+	}
     }
     if (option_was_seen(O_vhc))
     {

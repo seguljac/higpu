@@ -147,6 +147,7 @@ typedef struct clist_flags
     INT32       line_length;     /* 'zero' means: use the default */
 
 /** DAVID CODE BEGIN **/
+    BOOL        emit_opencl;     /* Emit openCL (instead of CUDA */
     // a file that contains all include headers in the original source
     // NOTE: this must take 4 bytes.
     const char *orig_incs_filename;
@@ -193,6 +194,7 @@ extern CLIST_FLAGS *Current_CLIST;
 #define CLIST_emit_omp        Current_CLIST->emit_omp
 #define CLIST_line_length       Current_CLIST->line_length
 /** DAVID CODE BEGIN **/
+#define CLIST_emit_opencl Current_CLIST->emit_opencl
 #define CLIST_orig_incs_filename Current_CLIST->orig_incs_filename
 /*** DAVID CODE END ***/
 

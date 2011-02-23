@@ -76,6 +76,7 @@ CLIST_FLAGS Clist_Flags =
     TRUE,  /* emit_omp */
     0,     /* line_length */
 /** DAVID CODE BEGIN **/
+    0,     /* emit_opencl */
     NULL, /* orig_incs_filename */
     {0,0,0,0,0,0,0,0,0,0,0,0}, /* buffer[12] */
 /*** DAVID CODE END ***/
@@ -145,6 +146,9 @@ static OPTION_DESC Options_CLIST[] =
        0, 0, 0, &CLF.loc_filename, NULL,
        "The name of a source location map-table file"},
 /** DAVID CODE BEGIN **/
+  { OVK_BOOL,	OV_SHY,	        FALSE, "emit_opencl", NULL,
+       0, 0, 0, &CLF.emit_opencl,  NULL,
+       "Emit OpenCL (instead of CUDA) code" },
   { OVK_NAME,	OV_SHY,     FALSE, "inc_file",       NULL,
        0, 0, 0, &CLF.orig_incs_filename, NULL,
        "The name of a file that includes all all include headers" },

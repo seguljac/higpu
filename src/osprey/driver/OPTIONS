@@ -873,6 +873,9 @@ I-xall	;		FTN	ffe	self
 
 -hicuda     ;   cc cfe  -mhc
         "enable the hiCUDA directives (same as -mhc)"
+-opencl ;   cc self
+        "emit OpenCL (instead of CUDA) code"
+
 
 -keep-all-types ; cc cfe self
         "keep all types in the generated WHIRL file"

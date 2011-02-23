@@ -302,6 +302,9 @@ extern INT32 IPA_Output_File_Size;
 // included in the input source
 extern char *IPA_HC_Included_Headers_B;
 
+// a flag that is TRUE if OpenCL (instead of CUDA) code should be emitted 
+extern BOOL flag_opencl;
+
 /*** DAVID CODE END ***/
 
    

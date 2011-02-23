@@ -309,6 +309,7 @@ BOOL IPA_Enable_Devirtualization = FALSE;
 
 /** DAVID CODE BEGIN **/
 char *IPA_HC_Included_Headers_B = NULL;
+BOOL flag_opencl = FALSE;
 /*** DAVID CODE END ***/
 
 static OPTION_DESC Options_IPA[] = {
@@ -599,6 +600,9 @@ static OPTION_DESC Options_IPA[] = {
           0, 0, 0, &IPA_HC_Included_Headers_B, NULL, 
           "Specify the WHIRL file that contains all symbols "
           "in the standard header files included" },
+    { OVK_BOOL,	OV_VISIBLE,	FALSE, "opencl", "", 
+           0, 0, 0, &flag_opencl, NULL, 
+           "Emit OpenCL (instead of CUDA) code"},
 /*** DAVID CODE END ***/
     { OVK_COUNT }	    /* List terminator -- must be last */
 };
