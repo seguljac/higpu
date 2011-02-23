@@ -259,6 +259,8 @@ typedef enum W2C_File_Kind
    W2C_DOTH_FILE, /* W2C generated .h file */
    W2C_DOTC_FILE, /* W2C generated .c file */
    W2C_LOC_FILE,  /* W2C generated source-to-source location mapping file */
+   W2C_CL_FILE,   /* W2C generated .cl (openCL kernel) file */
+   W2C_CLH_FILE,  /* W2C generated .cl.h (openCL kernel header) file */
    W2C_NUM_FILES  /* Number of elements in this enumeration */
 } W2C_FILE_KIND;
 
