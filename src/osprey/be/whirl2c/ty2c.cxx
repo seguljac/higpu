@@ -66,6 +66,7 @@ static char *rcs_id = "$Source: /proj/osprey/CVS/open64/osprey1.0/be/whirl2c/ty2
 #include "ty2c.h"
 #include "tcon2c.h"
 
+extern BOOL W2C_Emit_OpenCL;
 
 /*------------------ macros, types, and local state -------------------*/
 /*---------------------------------------------------------------------*/
@@ -545,8 +546,17 @@ TY2C_scalar(TOKEN_BUFFER decl_tokens, TY_IDX ty, CONTEXT context) {
         // We don't want to add this special case to 'Scalar_C_Names'.
         Prepend_Token_String(decl_tokens, "char");
     } else {
+      // Don't touch types of the form cl_* (openCL types)
+      if ((W2C_Emit_OpenCL) && 
+	  (strlen(TY_name(ty)) > 3) &&
+	  (TY_name(ty)[0] == 'c') && 
+	  (TY_name(ty)[1] == 'l') && 
+	  (TY_name(ty)[2] == '_')){
+	Prepend_Token_String(decl_tokens, TY_name(ty));	
+      } else {
         Prepend_Token_String(decl_tokens, 
                 Scalar_C_Names[TY_mtype(ty)].pseudo_name);
+      }
     }
 
     TY2C_prepend_qualifiers(decl_tokens, ty, context);
