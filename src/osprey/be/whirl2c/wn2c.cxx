@@ -2713,13 +2713,34 @@ WN2C_Append_Symtab_Vars(TOKEN_BUFFER tokens,
 
             Append_Indented_Newline(tmp_tokens, lines_between_decls);
 
-            if (tokens != NULL) {
-                Append_And_Reclaim_Token_List(tokens, &tmp_tokens);
-            } else {
-                Write_And_Reclaim_Tokens(W2C_File[W2C_DOTH_FILE], 
-                        NULL, /* No srcpos map */
-                        &tmp_tokens);
-            }
+	    // Write definition of functions that are used in kernel code
+	    // to the kernel header file	    
+	    if (W2C_Emit_OpenCL){
+	      if (tokens != NULL) {
+		// Never happend during testing
+		// Not implemented
+		assert(0);
+		Append_And_Reclaim_Token_List(tokens, &tmp_tokens);
+	      } else {
+		char str_buf[10000];
+		Str_Write_And_Reclaim_Tokens(str_buf, 10000, &tmp_tokens);
+		// printf(" All Var: %d\n", st_idx);
+		if (ST_class(st) == CLASS_FUNC && PU_is_device(Pu_Table[ST_pu(st)])){
+		  //  if (st_attr_is_used_in_kernel(st_idx)){
+		  //  printf(" Used Var: %d\n", st_idx);
+		  Write_String(W2C_File[W2C_CLH_FILE], NULL, str_buf);
+		}
+		Write_String(W2C_File[W2C_DOTH_FILE], NULL, str_buf);
+	      }	
+	    } else{
+	      if (tokens != NULL) {
+		Append_And_Reclaim_Token_List(tokens, &tmp_tokens);
+	      } else {
+		Write_And_Reclaim_Tokens(W2C_File[W2C_DOTH_FILE], 
+					 NULL, /* No srcpos map */
+					 &tmp_tokens);
+	      }
+	    }
         }
     }
 /*** DAVID CODE END ***/
