@@ -133,18 +133,17 @@ or "foo.opencl" (for OpenCL backend) in the current directory,
 and generate the following files in these folders:
 
 foo.cuda:
-  foo.cu:     the CUDA program
-  foo.cu.h:   the header file
-  whirl2c.h:  internal header file included in foo.cu.h
+  foo.cu:       the CUDA program
+  foo.cu.h:     the header file
+  whirl2c.h:    internal header file included in foo.cu.h
 
-### FIX_THIS ###
 foo.opencl:
-  foo.cpp:    the openCL program
-  foo.cu.h:   the header file
-  kernels.cl: the openCL kernels
-  whirl2c.h:  internal header file included in foo.cu.h
+  foo.c:        the openCL program
+  foo.h:        the header file
+  kernels.cl:   the openCL kernels
+  kernels.cl.h: the openCL kernels header file
+  whirl2c.h:    internal header file included in foo.cu.h
 
-### FIX_THIS ###
 foo.cu can then be used in normal CUDA compilation:
 
 $ nvcc foo.cu
