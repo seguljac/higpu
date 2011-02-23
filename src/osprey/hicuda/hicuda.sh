@@ -19,13 +19,14 @@ OPT_KEEP_STR="-keep"
 OPT_VERBOSE_STR="-v"
 OPT_ABI32_STR="-m32"
 OPT_ABI64_STR="-m64"
+OPT_EMIT_OPENCL_STR="-opencl"
 
 usage()
 {
     echo "$0"
     echo "    [-o <base name>] [-I<include path>]*" \
          "[${OPT_ABI32_STR}|${OPT_ABI64_STR}]" \
-         "[${OPT_KEEP_STR}] [${OPT_VERBOSE_STR}]"
+         "[${OPT_KEEP_STR}] [${OPT_VERBOSE_STR}] [${OPT_EMIT_OPENCL_STR}]"
     echo "    <input file(s)>"
     echo
 }
@@ -42,6 +43,7 @@ if [ `uname -m` == "x86_64" ]; then
 fi
 OPT_KEEP=0
 OPT_VERBOSE=0
+OPT_EMIT_OPENCL=0
 
 WARNING=0
 EXPECT_BASE_NAME=0  # 0: not seen -o, 1: seen -o, 2: seen BASE_NAME
@@ -66,6 +68,8 @@ while [ "x" != "x$1" ]; do
         "${OPT_ABI32_STR}" ) OPT_ABI_32=1
         ;;
         "${OPT_ABI64_STR}" ) OPT_ABI_32=0
+        ;;
+        "${OPT_EMIT_OPENCL_STR}" ) OPT_EMIT_OPENCL=1
         ;;
         "${OPT_BASE_NAME}" )
             if [ "${EXPECT_BASE_NAME}" -eq "0" ]; then
@@ -177,6 +181,9 @@ if [ ${OPT_ABI_32} -eq 1 ]; then
 else
     OPENCC_FLAGS="-m64 ${OPENCC_FLAGS}"
 fi
+if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
+    OPENCC_FLAGS="-opencl ${OPENCC_FLAGS}"
+fi
 
 # These are the two files to be produced.
 TMP_INC_B="${BASE_INC_NAME}.B"
@@ -214,6 +221,9 @@ fi
 
 IPA_FLAGS="-IPA:array_summary=on -IPA:compile=off -IPA:link=off"
 IPA_FLAGS="${IPA_FLAGS} -IPA:inc_B=${TMP_INC_B}"
+if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
+    IPA_FLAGS="-IPA:opencl=on ${IPA_FLAGS}"
+fi
 OPENCC_FLAGS="-keep -hicuda -gnu3 -ipa ${IPA_FLAGS}"
 OPENCC_FLAGS="${OPENCC_FLAGS} -o ${BASE_NAME}"
 if [ ${OPT_VERBOSE} -eq 1 ]; then
@@ -223,6 +233,11 @@ if [ ${OPT_ABI_32} -eq 1 ]; then
     OPENCC_FLAGS="-m32 ${OPENCC_FLAGS}"
 else
     OPENCC_FLAGS="-m64 ${OPENCC_FLAGS}"
+fi
+if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
+    OPENCC_FLAGS="-opencl ${OPENCC_FLAGS}"
+else
+    OPENCC_FLAGS="-opencl ${OPENCC_FLAGS}"
 fi
 
 # Incorporate the standard include paths for GCC on the local system.
@@ -308,6 +323,9 @@ WHIRL2C_FLAGS="-TARG:abi=${ABI_NAME} -TENV:read_global=symtab.I"
 if [[ ${OPT_VERBOSE} -eq 0 ]]; then
     WHIRL2C_FLAGS="${WHIRL2C_FLAGS} -CLIST:show=off"
 fi
+if [[ ${OPT_EMIT_OPENCL} -eq 1 ]]; then
+    WHIRL2C_FLAGS="${WHIRL2C_FLAGS} -CLIST:emit_opencl=on"
+fi
 
 # Remove from the header list two header files that are already in whirl2c.h.
 sed -i '/#include <math.h>/d' ${TMP_INC_FILE}
@@ -334,7 +352,11 @@ cd ..
 if [ ${EXIT_CODE} -ne 0 ]; then
     echo
     echo "=================================================================="
-    echo "    CUDA code generation FAILED (in whirl2c)."
+    if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
+	echo "    OpenCL code generation FAILED (in whirl2c)."
+    else
+	echo "    CUDA code generation FAILED (in whirl2c)."
+    fi
     echo "    The error message should be right above, starting with ###."
     echo
     echo "    If you believe that there is a bug in the hiCUDA compiler, "
@@ -360,7 +382,11 @@ fi
 #
 ###########################################################################
 
-OUTPUT_DIR_BASE="${BASE_NAME}.cuda"
+if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
+    OUTPUT_DIR_BASE="${BASE_NAME}.opencl"
+else
+    OUTPUT_DIR_BASE="${BASE_NAME}.cuda"
+fi
 
 # OUTPUT_DIR is a symbolic link to the actual folder named
 #       OUTPUT_DIR.OUTPUT_DIR_VER
@@ -375,8 +401,18 @@ OUTPUT_DIR="${OUTPUT_DIR_BASE}.${OUTPUT_DIR_VER}"
 mkdir ${OUTPUT_DIR}
 
 # Move the .cu and .cu.h files to the target directory.
-mv ${IPA_TMPDIR}/${BASE_NAME}.cu ${OUTPUT_DIR}
-mv ${IPA_TMPDIR}/${BASE_NAME}.cu.h ${OUTPUT_DIR}
+if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
+#    mv ${IPA_TMPDIR}/${BASE_NAME}.cu ${OUTPUT_DIR}/${BASE_NAME}.c
+ #   mv ${IPA_TMPDIR}/${BASE_NAME}.cu.h ${OUTPUT_DIR}/${BASE_NAME}.h
+  #  mv ${IPA_TMPDIR}/*.cl ${OUTPUT_DIR}
+   # mv ${IPA_TMPDIR}/*.cl.h ${OUTPUT_DIR}
+    ### FIX_THIS ###
+    mv ${IPA_TMPDIR}/${BASE_NAME}.cu ${OUTPUT_DIR}
+    mv ${IPA_TMPDIR}/${BASE_NAME}.cu.h ${OUTPUT_DIR}
+else
+    mv ${IPA_TMPDIR}/${BASE_NAME}.cu ${OUTPUT_DIR}
+    mv ${IPA_TMPDIR}/${BASE_NAME}.cu.h ${OUTPUT_DIR}
+fi
 
 # Copy the common whirl2c.h to the target directory.
 cp ${HICUDA_ROOT}/misc/whirl2c.h ${OUTPUT_DIR}
@@ -393,7 +429,11 @@ fi
 
 echo
 echo "================================================================="
-echo "    Successful CUDA code generation. Output files in: "
+if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
+    echo "    Successful OpenCL code generation. Output files in: "
+else
+    echo "    Successful CUDA code generation. Output files in: "
+fi
 echo "        ${OUTPUT_DIR}"
 echo "================================================================="
 echo
