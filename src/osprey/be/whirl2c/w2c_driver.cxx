@@ -103,7 +103,9 @@ static const char *W2C_File_Extension[W2C_NUM_FILES] =
    ".cu.h",   /* .h output file */
    ".cu",   /* .c output file */
 /*** DAVID CODE END ***/
-   ".w2c.loc"  /* .loc output file */
+   ".w2c.loc",  /* .loc output file */
+   ".cl",   /* openCL kernel source file */
+   ".cl.h"    /* openCL kernel header file */
 };
 
 /* CITE extensions for input/outfile files: */
@@ -112,7 +114,9 @@ static const char *W2C_Cite_Extension[W2C_NUM_FILES] =
    ".c",	        /* original input file */
    "-after-lno.h",	/* .c output file */
    "-after-lno.c",	/* .h output file */
-   ".loc"	        /* .loc output file */
+   ".loc",	        /* .loc output file */
+   ".dummy",            /* placeholder for .cl */
+   ".dummy"             /* placeholder for .cl.h */
 };
 
 /* ProMPF extensions for input/outfile files: */
@@ -121,7 +125,9 @@ static const char *W2C_Prompf_Extension[W2C_NUM_FILES] =
    ".c",	 /* original input file */
    ".mh",	 /* transformed header file */
    ".m",	 /* transformed source file */
-   ".anl_srcpos" /* srcpos mapping (temporary) output file */
+   ".anl_srcpos",/* srcpos mapping (temporary) output file */
+   ".dummy",     /* placeholder for .cl */
+   ".dummy"      /* placeholder for .cl.h */
 };
 
 /* Get the right extension: */
@@ -143,13 +149,13 @@ static BOOL        W2C_Initialized = FALSE;
 static CONTEXT     Global_Context = INIT_CONTEXT;
 static const char *W2C_Progname = "";
 static const char *W2C_File_Name[W2C_NUM_FILES] = 
-                                          {NULL, NULL, NULL, NULL};
+                                          {NULL, NULL, NULL, NULL, NULL, NULL};
 static BOOL        File_Is_Created[W2C_NUM_FILES] = 
-                                          {FALSE, FALSE, FALSE, FALSE};
+                                          {FALSE, FALSE, FALSE, FALSE, FALSE, FALSE};
 static MEM_POOL     W2C_Parent_Pool;
 
 /* External data set through command-line options */
-FILE *W2C_File[W2C_NUM_FILES] = {NULL, NULL, NULL, NULL};
+FILE *W2C_File[W2C_NUM_FILES] = {NULL, NULL, NULL, NULL, NULL, NULL};
 BOOL  W2C_Enabled = TRUE;           /* Invoke W2C */
 BOOL  W2C_Verbose = TRUE;           /* Show translation information */
 BOOL  W2C_No_Pragmas = FALSE;       /* Do not emit pragmas */
@@ -163,6 +169,7 @@ BOOL  W2C_Emit_Cgtag = FALSE;       /* Emit codegen tags for loop */
 BOOL  W2C_Lower_Fortran = FALSE;    /* Lower Fortran intrinsics and io */
 BOOL  W2C_Emit_Omp = FALSE;         /* Force OMP pragmas wherever possible */
 INT32 W2C_Line_Length = 0;   /* Max output line length; zero==default */
+BOOL  W2C_Emit_OpenCL = 0;          /* Emit OpenCL (instead of CUDA) code */
 
 /* External data set through the API or otherwise */
 BOOL          W2C_Only_Mark_Loads = FALSE; /* Only mark, do not xlate loads */
@@ -276,6 +283,14 @@ Process_Filename_Options(const char *src_filename, const char *irb_filename)
    if ( W2C_File_Name[W2C_DOTC_FILE] == NULL ) {
       W2C_File_Name[W2C_DOTC_FILE] = 
 	 New_Extension ( fname, W2C_Extension(W2C_DOTC_FILE) );
+   }
+   if ( W2C_File_Name[W2C_CL_FILE] == NULL ) {
+      W2C_File_Name[W2C_CL_FILE] = 
+	New_Extension ( "kernels", W2C_Extension(W2C_CL_FILE) );
+   }
+   if ( W2C_File_Name[W2C_CLH_FILE] == NULL ) {
+      W2C_File_Name[W2C_CLH_FILE] = 
+	New_Extension ( "kernels", W2C_Extension(W2C_CLH_FILE) );
    }
    if (W2C_File_Name[W2C_LOC_FILE] == NULL)
    {
@@ -654,6 +669,7 @@ W2C_Process_Command_Line (INT phase_argc, char * const phase_argv[],
    W2C_Lower_Fortran = CLIST_lower_ftn;
    W2C_Emit_Omp = CLIST_emit_omp;
    W2C_Line_Length = CLIST_line_length;
+   W2C_Emit_OpenCL = CLIST_emit_opencl;
 
     Process_Filename_Options(Src_File_Name, Irb_File_Name);
 } /* W2C_Process_Command_Line */
@@ -1051,6 +1067,7 @@ W2C_Fini(void)
       W2C_Emit_Frequency = FALSE;   /* Emit feedback frequency info */
       W2C_Lower_Fortran = FALSE;    /* Lower Fortran intrinsics and io */
       W2C_Line_Length = 0;   /* Max output line length; zero==default */
+      W2C_Emit_OpenCL = 0;          /* Emit OpenCL (instead of CUDA) code */
 
       W2C_Only_Mark_Loads = FALSE;
       W2C_Cplus_Initializer = FALSE;
