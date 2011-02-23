@@ -236,8 +236,6 @@ else
 fi
 if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
     OPENCC_FLAGS="-opencl ${OPENCC_FLAGS}"
-else
-    OPENCC_FLAGS="-opencl ${OPENCC_FLAGS}"
 fi
 
 # Incorporate the standard include paths for GCC on the local system.
