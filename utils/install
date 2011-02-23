@@ -116,17 +116,17 @@ cp ${SCRIPT_DIR}/rmpath.csh ${HICUDA_BIN}
 # set-hicuda.sh, set-hicuda.csh
 # Insert the compiler's installation root to the scripts.
 sed "s;##HICUDA_ROOT_STUB##;${HICUDA_ROOT};g" \
-    ${SCRIPT_DIR}/set-hicuda.sh > ${HICUDA_BIN}/set-hicuda.sh
+    ${SCRIPT_DIR}/set-hicuda.sh > ${HICUDA_BIN}/set-higpu.sh
 sed "s;##HICUDA_ROOT_STUB##;${HICUDA_ROOT};g" \
-    ${SCRIPT_DIR}/set-hicuda.csh > ${HICUDA_BIN}/set-hicuda.csh
+    ${SCRIPT_DIR}/set-hicuda.csh > ${HICUDA_BIN}/set-higpu.csh
 
 # unset-hicuda.sh, unset-hicuda.csh
-cp ${SCRIPT_DIR}/unset-hicuda.sh ${HICUDA_BIN}
-cp ${SCRIPT_DIR}/unset-hicuda.csh ${HICUDA_BIN}
+cp ${SCRIPT_DIR}/unset-hicuda.sh ${HICUDA_BIN}/unset-higpu.sh
+cp ${SCRIPT_DIR}/unset-hicuda.csh ${HICUDA_BIN}/unset-higpu.sh
 
 # hiCUDA compiler driver script
 HICUDA_SRC_DIR="${SRC_DIR}/osprey/hicuda"
-cp ${HICUDA_SRC_DIR}/hicuda.sh ${HICUDA_BIN}/hicuda
+cp ${HICUDA_SRC_DIR}/hicuda.sh ${HICUDA_BIN}/higpu
 
 # Copy whirl2c.h to the <misc> folder.
 HICUDA_MISC="${HICUDA_ROOT}/misc"

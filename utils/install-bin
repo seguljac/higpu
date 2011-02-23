@@ -97,9 +97,9 @@ HICUDA_BIN_DIR="${HICUDA_ROOT}/bin"
 # Configure set-hicuda.sh and set-hicuda.csh
 # Insert the compiler's installation root to the scripts.
 sed "s;##HICUDA_ROOT_STUB##;${HICUDA_ROOT};g" \
-    ${BIN_DIR}/set-hicuda.sh > ${HICUDA_BIN_DIR}/set-hicuda.sh
+    ${BIN_DIR}/set-hicuda.sh > ${HICUDA_BIN_DIR}/set-higpu.sh
 sed "s;##HICUDA_ROOT_STUB##;${HICUDA_ROOT};g" \
-    ${BIN_DIR}/set-hicuda.csh > ${HICUDA_BIN_DIR}/set-hicuda.csh
+    ${BIN_DIR}/set-hicuda.csh > ${HICUDA_BIN_DIR}/set-higpu.csh
 
 # Remove the script install-bin
 rm ${HICUDA_ROOT}/install-bin
