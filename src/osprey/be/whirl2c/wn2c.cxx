@@ -84,6 +84,9 @@ static char *rcs_id = "$Source: /proj/osprey/CVS/open64/osprey1.0/be/whirl2c/wn2
 #include "tracing.h"        // for TDEBUG_HICUDA
 /*** DAVID CODE END ***/
 
+extern BOOL W2C_Emit_OpenCL;
+extern int openCL_in_kernel_code;
+extern TOKEN_BUFFER kernel_tokens;
 
 #define WN_pragma_nest(wn) WN_pragma_arg1(wn)
 
@@ -2562,12 +2565,34 @@ static void WN2C_Append_Symtab_Types(TOKEN_BUFFER tokens,
         Append_Token_Special(tmp_tokens, ';');
         Append_Indented_Newline(tmp_tokens, lines_between_decls);
 
-        if (tokens != NULL) {
+	// Write definition of types that are used in kernel code
+	// to the kernel header file
+	if (W2C_Emit_OpenCL){
+	  if (tokens != NULL) {
+	    // Never happend during testing
+	    // Not implemented
+	    assert(0);
+	    Append_And_Reclaim_Token_List(tokens, &tmp_tokens);
+	  } else {
+	    char str_buf[10000];
+	    Str_Write_And_Reclaim_Tokens(str_buf, 10000, &tmp_tokens);
+	    // printf(" All Type: %d\n", ty_idx);
+	    if (TY_is_used_in_kernel(ty)){
+	      // printf(" Used Type in kernel : %d\n", ty_idx);
+	      // Write it to the kernel header file
+	      Write_String(W2C_File[W2C_CLH_FILE], NULL, str_buf);
+	    }
+	    // Write it to the main header file as well
+	    Write_String(W2C_File[W2C_DOTH_FILE], NULL, str_buf);
+	  }	
+	} else {
+	  if (tokens != NULL) {
             Append_And_Reclaim_Token_List(tokens, &tmp_tokens);
-        } else {
+	  } else {
             Write_And_Reclaim_Tokens(W2C_File[W2C_DOTH_FILE], 
-                    NULL /* No srcpos map */, &tmp_tokens);
-        }
+				     NULL /* No srcpos map */, &tmp_tokens);
+	  }
+	}
     }
 }  /* WN2C_Append_Symtab_Types */
 
