@@ -1159,11 +1159,49 @@ void W2C_Outfile_Init(BOOL emit_global_decls)
      */
 /** DAVID CODE BEGIN **/
     systime = time(NULL);
-    Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
-            "/*******************************************************\n"
-            " * CUDA file generated at ");
+    if (W2C_Emit_OpenCL){
+      Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
+		   "/*******************************************************\n"
+		   " * OpenCL file generated at ");
+    } else {
+      Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
+		   "/*******************************************************\n"
+		   " * CUDA file generated at ");
+    }
     Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
             (systime != (time_t)-1) ? ctime(&systime) : "unknown time\n");
+
+    if (W2C_Emit_OpenCL){
+      // Initialize the OpenCL kernel source file
+      Open_W2c_Output_File(W2C_CL_FILE);
+      Write_String(W2C_File[W2C_CL_FILE], W2C_File[W2C_LOC_FILE],
+		   "/*******************************************************\n"
+		   " * OpenCL kernel source file generated at ");
+      Write_String(W2C_File[W2C_CL_FILE], W2C_File[W2C_LOC_FILE],
+		   (systime != (time_t)-1) ? ctime(&systime) : "unknown time\n");
+      Write_String(W2C_File[W2C_CL_FILE], W2C_File[W2C_LOC_FILE],
+		   " *******************************************************/"
+		   "\n\n");
+      
+      // Initialize the OpenCL kernel header file
+      Open_W2c_Output_File(W2C_CLH_FILE);
+      Write_String(W2C_File[W2C_CLH_FILE], W2C_File[W2C_LOC_FILE],
+		   "/*******************************************************\n"
+		   " * OpenCL kernel header file generated at ");
+      Write_String(W2C_File[W2C_CLH_FILE], W2C_File[W2C_LOC_FILE],
+		   (systime != (time_t)-1) ? ctime(&systime) : "unknown time\n");
+      Write_String(W2C_File[W2C_CLH_FILE], W2C_File[W2C_LOC_FILE],
+		   " *******************************************************/"
+		   "\n\n");
+      
+      Write_String(W2C_File[W2C_CLH_FILE], W2C_File[W2C_LOC_FILE],
+		   "#define threadIdxX get_local_id(0)\n"
+		   "#define threadIdxY get_local_id(1)\n"
+		   "#define threadIdxZ get_local_id(2)\n" 
+		   "#define blockIdxX get_group_id(0)\n"
+		   "#define blockIdxY get_group_id(1)\n"
+		   "#define blockIdxZ get_group_id(2)\n\n");
+   }
 /*** DAVID CODE END ***/
     Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
             " *******************************************************/"
@@ -1187,10 +1225,83 @@ void W2C_Outfile_Init(BOOL emit_global_decls)
         Write_String(W2C_File[W2C_DOTH_FILE], NULL, "\n");
         fclose(inc_fp);
 
-        /* Include <cuda_runtime.h> in the header file. */
-        Write_String(W2C_File[W2C_DOTH_FILE], NULL,
-                "/* Include CUDA runtime library headers */\n"
-                "#include <cuda_runtime.h>\n\n");
+	if (W2C_Emit_OpenCL){
+	  /* Include <oclUtils.h> in the header file. */
+	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
+		       "/* Include openCL runtime library headers */\n"
+		       "#include <oclUtils.h>\n\n");
+	}
+	else {
+	  /* Include <cuda_runtime.h> in the header file. */
+	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
+		       "/* Include CUDA runtime library headers */\n"
+		       "#include <cuda_runtime.h>\n\n");
+	}
+	
+	
+	if (W2C_Emit_OpenCL){
+	  /* Output clInit function in the header file. */
+	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
+		       "/* Output clInit function */\n"
+		       "static int clInit(cl_context *context,\n"
+		       "\t\tcl_command_queue *queue,\n"
+		       "\t\tcl_program *program){\n"
+		       "\tcl_platform_id platform;\n"
+		       "\tcl_device_id device;\n"   
+		       "\tchar* program_string;\n"   
+		       "\tchar* header_string;\n"       
+		       "\tsize_t program_length;\n"	 
+		       "\tchar *build_log;\n"
+		       "\tsize_t build_log_size;\n"
+		       "\tcl_int init_error;\n\n"      
+		       "\tinit_error = clGetPlatformIDs(1, &platform, NULL);\n"
+		       "\tinit_error |= clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);\n"  
+		       "\t*context = clCreateContext(0, 1, &device, NULL, NULL, &init_error);\n"
+		       "\tif (init_error != CL_SUCCESS) printf(\"Platform and context FAILED\\n\");\n\n"
+		       "\t*queue = clCreateCommandQueue(*context, device, 0, &init_error);\n"  
+		       "\tif (init_error != CL_SUCCESS) printf(\"Command queue FAILED\\n\");\n\n"
+		       "\theader_string = oclLoadProgSource(\"kernels.cl.h\", \"\", NULL);\n"
+		       "\tprogram_string = oclLoadProgSource(\"kernels.cl\", header_string, &program_length);\n"
+		       "\t*program = clCreateProgramWithSource(*context, 1, (const char **)&program_string, &program_length, &init_error);\n"
+		       "\tif (init_error != CL_SUCCESS) printf(\"Kernel program FAILED\\n\");\n"
+		       "\tinit_error = clBuildProgram(*program, 0, NULL, \"-w -cl-nv-verbose -cl-nv-opt-level=3\", NULL, NULL);\n"
+		       "\tinit_error |= clGetProgramBuildInfo(*program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &build_log_size);\n"
+		       "\tbuild_log = (char*) malloc(build_log_size+1);\n"
+		       "\tinit_error |= clGetProgramBuildInfo(*program, device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log, NULL);\n"
+		       "\tbuild_log[build_log_size] = 0;\n"
+		       "\tfprintf(stdout, \"%s\\n\", build_log );\n"
+		       "\tif (init_error != CL_SUCCESS) printf(\"Kernel built FAILED\\n\");\n\n"
+		       "\tfree(build_log);\n"
+		       "\treturn init_error;\n"
+		       "}\n\n");
+	  
+	  /* Output clCreateBufferRet function in the header file. */
+	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
+		       "void clCreateBufferRet (cl_mem* ret, cl_context context, cl_mem_flags flags, size_t size, void *host_ptr, cl_int *errcode_ret){\n"
+		       "\t*ret = clCreateBuffer(context, flags, size, host_ptr, errcode_ret);\n"
+		       "}\n\n");
+	  
+	  /* Output clCreateKernelRet function in the header file. */
+	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
+		       "void clCreateKernelRet (cl_kernel *ret, cl_program program, const char *kernel_name, cl_int *errcode_ret){\n"
+		       "\t*ret = clCreateKernel (program, kernel_name, errcode_ret);\n"
+		       "}\n\n");
+
+	  /* Output clEnqueueWriteCleanBuffer function in the header file. */
+	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
+		       "void clEnqueueWriteCleanBuffer (cl_command_queue command_queue,\n"
+		       "\t\tcl_mem buffer,\n"
+		       "\t\tcl_bool blocking_write,\n"
+		       "\t\tsize_t offset,\n"
+		       "\t\tsize_t cb,\n"
+		       "\t\tvoid *ptr,\n"
+		       "\t\tcl_uint num_events_in_wait_list,\n"
+		       "\t\tconst cl_event *event_wait_list,\n"
+		       "\t\tcl_event *event){\n"
+		       "\tmemset(ptr, 0, cb);\n"
+		       "\tclEnqueueWriteBuffer(command_queue, buffer, blocking_write, offset, cb, ptr, num_events_in_wait_list, event_wait_list, event);\n"
+		       "}\n\n");
+	}
 
         /* Ensure that the C symbols are not mangled in nvcc. */
         Write_String(W2C_File[W2C_DOTH_FILE], NULL,
@@ -1207,8 +1318,19 @@ void W2C_Outfile_Init(BOOL emit_global_decls)
         Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
                 "/* Include file-level type and variable decls */\n"
                 "#include \"");
-        Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
-                W2C_File_Name[W2C_DOTH_FILE]);
+	if (W2C_Emit_OpenCL){
+	  // W2C_File_Name[W2C_DOTH_FILE] is xxx.cu.h, but we want xxx.h for OpenCl
+	  char filename[MAX_FNAME_LENGTH+7];
+	  strcpy(filename, W2C_File_Name[W2C_DOTH_FILE]);
+	  int extension = strlen(filename) - 4;
+	  filename[extension] = 'h';
+	  filename[extension + 1] = 0;
+	  Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
+		       filename);
+	} else {
+	  Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
+		       W2C_File_Name[W2C_DOTH_FILE]);
+	}
         Write_String(W2C_File[W2C_DOTC_FILE], W2C_File[W2C_LOC_FILE],
                 "\"\n\n");
     }
@@ -1239,6 +1361,12 @@ W2C_Outfile_Translate_Pu(WN *pu, BOOL emit_global_decls)
    Open_W2c_Output_File(W2C_DOTC_FILE);
    if (emit_global_decls)
       Open_W2c_Output_File(W2C_DOTH_FILE);
+
+   // Open kernels source and header files
+   if (W2C_Emit_OpenCL){
+     Open_W2c_Output_File(W2C_CL_FILE);
+     Open_W2c_Output_File(W2C_CLH_FILE);
+   }
 
    if (W2C_Emit_Nested_PUs && !W2C_Lower_Fortran)
       lower_actions = LOWER_MP;
@@ -1291,6 +1419,10 @@ W2C_Outfile_Fini(BOOL emit_global_decls)
     if (emit_global_decls)
     {
         Open_W2c_Output_File(W2C_DOTH_FILE);
+	if (W2C_Emit_OpenCL){
+	  Open_W2c_Output_File(W2C_CL_FILE);
+	  Open_W2c_Output_File(W2C_CLH_FILE);
+	}
 
         // Write struct types to the header file.
         WN2C_translate_structured_types();
@@ -1315,6 +1447,10 @@ W2C_Outfile_Fini(BOOL emit_global_decls)
    Close_W2c_Output_File(W2C_LOC_FILE);
    Close_W2c_Output_File(W2C_DOTH_FILE);
    Close_W2c_Output_File(W2C_DOTC_FILE);
+   if (W2C_Emit_OpenCL){
+     Close_W2c_Output_File(W2C_CL_FILE);
+     Close_W2c_Output_File(W2C_CLH_FILE);
+   }
 
    /* All files must be closed before doing a partial 
     * finalization, except W2C_LOC_FILE.
@@ -1339,6 +1475,10 @@ W2C_Cleanup(void)
    Close_W2c_Output_File(W2C_LOC_FILE);
    Close_W2c_Output_File(W2C_DOTH_FILE);
    Close_W2c_Output_File(W2C_DOTC_FILE);
+   if (W2C_Emit_OpenCL){
+     Close_W2c_Output_File(W2C_CL_FILE);
+     Close_W2c_Output_File(W2C_CLH_FILE);
+   }
    if (W2C_File_Name[W2C_LOC_FILE] != NULL)
       unlink(W2C_File_Name[W2C_LOC_FILE]);
 }

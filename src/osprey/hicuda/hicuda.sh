@@ -400,13 +400,10 @@ mkdir ${OUTPUT_DIR}
 
 # Move the .cu and .cu.h files to the target directory.
 if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
-#    mv ${IPA_TMPDIR}/${BASE_NAME}.cu ${OUTPUT_DIR}/${BASE_NAME}.c
- #   mv ${IPA_TMPDIR}/${BASE_NAME}.cu.h ${OUTPUT_DIR}/${BASE_NAME}.h
-  #  mv ${IPA_TMPDIR}/*.cl ${OUTPUT_DIR}
-   # mv ${IPA_TMPDIR}/*.cl.h ${OUTPUT_DIR}
-    ### FIX_THIS ###
-    mv ${IPA_TMPDIR}/${BASE_NAME}.cu ${OUTPUT_DIR}
-    mv ${IPA_TMPDIR}/${BASE_NAME}.cu.h ${OUTPUT_DIR}
+    mv ${IPA_TMPDIR}/${BASE_NAME}.cu ${OUTPUT_DIR}/${BASE_NAME}.c
+    mv ${IPA_TMPDIR}/${BASE_NAME}.cu.h ${OUTPUT_DIR}/${BASE_NAME}.h
+    mv ${IPA_TMPDIR}/*.cl ${OUTPUT_DIR}
+    mv ${IPA_TMPDIR}/*.cl.h ${OUTPUT_DIR}
 else
     mv ${IPA_TMPDIR}/${BASE_NAME}.cu ${OUTPUT_DIR}
     mv ${IPA_TMPDIR}/${BASE_NAME}.cu.h ${OUTPUT_DIR}
