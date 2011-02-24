@@ -14,6 +14,8 @@
 #include "hc_expr.h"
 #include "cuda_utils.h"
 
+#include "assert.h"
+
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
@@ -72,8 +74,32 @@ static WN* HC_make_gvar_transfer_code(HC_GPU_DATA *gdata, BOOL copyin,
                 src_wn = gvar_wn; dst_wn = var_wn;
             }
 
-            tcall_wn = call_cudaMemcpy(dst_wn, src_wn,
-                    WN_COPY_Tree(gvi->get_size()), copy_direction);
+	    if (flag_opencl){
+	      if (copyin) {
+		tcall_wn = call_clEnqueueWriteBuffer(WN_LdidScalar((hc_glob_var_store.get_cl_command_queue_sym())),
+						     gvar_wn, 
+						     WN_LdidScalar(hc_glob_var_store.get_cl_false_sym()),
+						     WN_Zerocon(Integer_type),
+						     WN_COPY_Tree(gvi->get_size()),
+						     var_wn,
+						     WN_Zerocon(Integer_type),
+						     WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()),
+						     WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()));
+	      } else {
+		tcall_wn = call_clEnqueueReadBuffer(WN_LdidScalar(hc_glob_var_store.get_cl_command_queue_sym()), 
+						    gvar_wn, 
+						    WN_LdidScalar(hc_glob_var_store.get_cl_true_sym()),
+						    WN_Zerocon(Integer_type),
+						    WN_COPY_Tree(gvi->get_size()),
+						    var_wn,
+						    WN_Zerocon(Integer_type),
+						    WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()),
+						    WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()));
+	      }
+	    } else {
+	      tcall_wn = call_cudaMemcpy(dst_wn, src_wn,
+					 WN_COPY_Tree(gvi->get_size()), copy_direction);
+	    }
         }
         else
         {
@@ -82,10 +108,15 @@ static WN* HC_make_gvar_transfer_code(HC_GPU_DATA *gdata, BOOL copyin,
             ST_IDX cmem_st_idx = hc_glob_var_store.get_cmem_sym();
             WN *gvar_ofst_wn = WN_Intconst(Integer_type, gvi->get_offset());
 
-            // Create a cudaMemcpyToSymbol call.
-            tcall_wn = call_cudaMemcpyToSymbol(cmem_st_idx, var_wn,
-                    WN_COPY_Tree(gvi->get_size()),
-                    gvar_ofst_wn, copy_direction);
+	    if (flag_opencl){
+	      // OpenCL not implemented here.
+	      assert(0);
+	    } else {
+	      // Create a cudaMemcpyToSymbol call.
+	      tcall_wn = call_cudaMemcpyToSymbol(cmem_st_idx, var_wn,
+						 WN_COPY_Tree(gvi->get_size()),
+						 gvar_ofst_wn, copy_direction);
+	    }
         }
 
         WN_INSERT_BlockFirst(memcpy_blk, tcall_wn);
@@ -235,9 +266,33 @@ static WN* HC_make_gvar_transfer_code(HC_GPU_DATA *gdata, BOOL copyin,
             dst_wn = var_access_wn; src_wn = gvar_access_wn;
         }
 
-        // Create a cudaMemcpy call.
-        tcall_wn = call_cudaMemcpy(dst_wn, src_wn,
-                WN_LdidScalar(batsz_st_idx), copy_direction);
+	if (flag_opencl){
+	  if (copyin) {
+	    tcall_wn = call_clEnqueueWriteBuffer(WN_LdidScalar((hc_glob_var_store.get_cl_command_queue_sym())),
+						 gvar_access_wn, 
+						 WN_LdidScalar(hc_glob_var_store.get_cl_false_sym()),
+						 WN_Zerocon(Integer_type),
+						 WN_LdidScalar(batsz_st_idx),
+						 var_access_wn,
+						 WN_Zerocon(Integer_type),
+						 WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()),
+						 WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()));
+	  } else {
+	    tcall_wn = call_clEnqueueReadBuffer(WN_LdidScalar(hc_glob_var_store.get_cl_command_queue_sym()), 
+						gvar_access_wn, 
+						WN_LdidScalar(hc_glob_var_store.get_cl_true_sym()),
+						WN_Zerocon(Integer_type),
+						WN_LdidScalar(batsz_st_idx),
+						var_access_wn,
+						WN_Zerocon(Integer_type),
+						WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()),
+						WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()));
+	  }
+	} else {
+	  // Create a cudaMemcpy call.
+	  tcall_wn = call_cudaMemcpy(dst_wn, src_wn,
+				     WN_LdidScalar(batsz_st_idx), copy_direction);
+	}
     }
     else
     {
@@ -247,10 +302,15 @@ static WN* HC_make_gvar_transfer_code(HC_GPU_DATA *gdata, BOOL copyin,
         gvar_ofst_wn = WN_Add(Integer_type, gvar_ofst_wn,
                 WN_Intconst(Integer_type, gvi->get_offset()));
 
-        // Create a cudaMemcpyToSymbol call.
-        tcall_wn = call_cudaMemcpyToSymbol(cmem_st_idx, var_access_wn,
-                WN_LdidScalar(batsz_st_idx),
-                gvar_ofst_wn, cudaMemcpyHostToDevice);
+	if (flag_opencl){
+	  // OpenCL not implemented here.
+	  assert(0);
+	} else {
+	  // Create a cudaMemcpyToSymbol call.
+	  tcall_wn = call_cudaMemcpyToSymbol(cmem_st_idx, var_access_wn,
+					     WN_LdidScalar(batsz_st_idx),
+					     gvar_ofst_wn, cudaMemcpyHostToDevice);
+	}
     }
 
     // Insert the transfer call in the parent loop.
@@ -367,11 +427,22 @@ WN* HC_lower_global_copyin(WN *pragma_wn, WN *parent_wn,
     gvi->set_symbol(gvar_st_idx);
     gvi->set_size(gvar_sz_wn);
 
-    // Construct a call that allocates the global variable, and insert it
-    // to the parent block.
-    WN_INSERT_BlockBefore(parent_wn, insert_pt,
-            call_cudaMalloc(WN_LdaZeroOffset(ST_ptr(gvar_st_idx)),
-                WN_COPY_Tree(gvar_sz_wn)));
+    if (flag_opencl){
+      WN* wcall = call_clCreateBufferRet(WN_LdaZeroOffset(gvar_st_idx),
+					 WN_LdidScalar(hc_glob_var_store.get_cl_context_sym()),
+					 WN_LdidScalar(hc_glob_var_store.get_cl_mem_read_write_sym()),
+					 WN_COPY_Tree(gvar_sz_wn),
+					 WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()),
+					 WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()));
+      
+      WN_INSERT_BlockBefore(parent_wn,insert_pt, wcall);
+    } else {
+      // Construct a call that allocates the global variable, and insert it
+      // to the parent block.
+      WN_INSERT_BlockBefore(parent_wn, insert_pt,
+			    call_cudaMalloc(WN_LdaZeroOffset(ST_ptr(gvar_st_idx)),
+					    WN_COPY_Tree(gvar_sz_wn)));
+    }      
 
     // Generate the code for copying the data from the host memory to
     // the global memory.
@@ -383,9 +454,22 @@ WN* HC_lower_global_copyin(WN *pragma_wn, WN *parent_wn,
     }
     else if (gdata->do_clear())
     {
-        WN_INSERT_BlockBefore(parent_wn, insert_pt,
+      if (flag_opencl){
+	WN_INSERT_BlockBefore(parent_wn, insert_pt,
+			      call_clEnqueueWriteCleanBuffer(WN_LdidScalar(hc_glob_var_store.get_cl_command_queue_sym()),
+							     WN_LdidScalar(gvar_st_idx), 
+							     WN_LdidScalar(hc_glob_var_store.get_cl_false_sym()),
+							     WN_Zerocon(Integer_type),
+							     WN_COPY_Tree(gvar_sz_wn),
+							     WN_LdidScalar(var_st_idx),
+							     WN_Zerocon(Integer_type),
+							     WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()),
+							     WN_LdidScalar(hc_glob_var_store.get_cl_null_sym())));
+      } else {
+	WN_INSERT_BlockBefore(parent_wn, insert_pt,
                 call_cudaMemset(WN_LdidScalar(gvar_st_idx),
                     WN_Intconst(Integer_type, 0), WN_COPY_Tree(gvar_sz_wn)));
+      }
     }
 
     if (Get_Trace(TKIND_DEBUG, TDEBUG_HICUDA))
@@ -497,8 +581,14 @@ WN* HC_lower_global_free(WN *pragma_wn, WN *parent_wn,
     // Create a call to cudaFree and add it before the pragma.
     ST_IDX gvar_st_idx = gdata->get_gvar_info()->get_symbol();
     TY_IDX gvar_ty_idx = ST_type(gvar_st_idx);
-    WN_INSERT_BlockBefore(parent_wn, insert_pt,
-            call_cudaFree(WN_Ldid(Pointer_type, 0, gvar_st_idx, gvar_ty_idx)));
+
+    if (flag_opencl){
+      WN_INSERT_BlockBefore(parent_wn, insert_pt,
+			    call_clReleaseMemObj(WN_LdidScalar(gvar_st_idx)));
+    } else {
+      WN_INSERT_BlockBefore(parent_wn, insert_pt,
+			    call_cudaFree(WN_Ldid(Pointer_type, 0, gvar_st_idx, gvar_ty_idx)));
+    }
 
     if (Get_Trace(TKIND_DEBUG, TDEBUG_HICUDA))
     {
@@ -546,10 +636,14 @@ void HC_create_local_cvar(HC_GPU_DATA *gdata)
     ST_IDX var_st_idx = gdata->get_symbol();
     ST_IDX cvar_st_idx = new_local_var(gen_var_str("c_", var_st_idx),
             gdata->create_gvar_type());
-    // It is just a regular variable (no need for a special flag).
-    // set_st_attr_is_const_var(cvar_st_idx);
-    // Save it in the GPU variable record.
-    gvi->set_symbol(cvar_st_idx);
+    if (flag_opencl){ 
+      set_st_attr_is_const_var(cvar_st_idx);
+    } else {
+      // It is just a regular variable (no need for a special flag).
+      // set_st_attr_is_const_var(cvar_st_idx);
+      // Save it in the GPU variable record.
+      gvi->set_symbol(cvar_st_idx);
+    }
 }
 
 WN* HC_create_cvar_init_stmt(const HC_GPU_VAR_INFO *gvi)
@@ -1076,15 +1170,41 @@ static WN* HC_gen_code_for_shared_copyin(WN *pragma_wn, HC_GPU_DATA *sdata,
     // Create a BLOCK node to hold the generated code.
     WN *blk_wn = WN_CreateBlock();
 
-    // Generate an assignment that initializes the shared memory variable
-    // with <smem> + <offset>.
-    ST_IDX smem_st_idx = hc_glob_var_store.get_smem_sym();
-    WN *smem_wn = WN_CreateLda(OPR_LDA, Pointer_type, MTYPE_V, 0,
-            svar_ty_idx, smem_st_idx, 0);
-    WN_INSERT_BlockLast(blk_wn,
-            WN_StidScalar(ST_ptr(svar_st_idx),
-                WN_Add(Pointer_type, smem_wn,
-                    WN_Intconst(Integer_type, svi->get_offset()))));
+    if (flag_opencl){ 
+      // X is a shared variable 
+      // 1) Declare a shared array cl_X
+      // 2) Make assignment X = cl_X
+      
+      TY_IDX base_ty_idx = TY_pointed(Ty_Table[svar_ty_idx]);
+      TY_IDX tya_idx = Make_Array_Type(TY_mtype(base_ty_idx), 
+				       1, 
+				       WN_const_val(svi->get_size()) / TY_size(base_ty_idx));
+
+      ST_IDX cl_svar_st_idx = new_local_var(gen_var_str("cl_", svar_st_idx),
+					    tya_idx);
+      
+      set_st_attr_is_shared_var(cl_svar_st_idx);
+      set_st_attr_is_shared_var(svar_st_idx);
+      
+      WN *cl_svar_wn = WN_CreateLda(OPR_LDA, Pointer_type, MTYPE_V, 0,
+				    svar_ty_idx, cl_svar_st_idx, 0);
+      
+      WN_INSERT_BlockLast(blk_wn,
+			  WN_StidScalar(ST_ptr(svar_st_idx),
+					WN_Add(Pointer_type, cl_svar_wn,
+					       WN_Intconst(Integer_type, 0))));
+
+    } else {
+      // Generate an assignment that initializes the shared memory variable
+      // with <smem> + <offset>.
+      ST_IDX smem_st_idx = hc_glob_var_store.get_smem_sym();
+      WN *smem_wn = WN_CreateLda(OPR_LDA, Pointer_type, MTYPE_V, 0,
+				 svar_ty_idx, smem_st_idx, 0);
+      WN_INSERT_BlockLast(blk_wn,
+			  WN_StidScalar(ST_ptr(svar_st_idx),
+					WN_Add(Pointer_type, smem_wn,
+					       WN_Intconst(Integer_type, svi->get_offset()))));
+    }
 
     // Generate the code for copying the data from the global memory to the
     // shared memory.
