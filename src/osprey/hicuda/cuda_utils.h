@@ -81,6 +81,8 @@ extern TY_IDX uint3_ty_idx;
 extern TY_IDX cl_mem_ty_idx;
 extern TY_IDX cl_context_ty_idx;
 extern TY_IDX cl_command_queue_ty_idx;
+extern TY_IDX cl_kernel_ty_idx;
+extern TY_IDX cl_program_ty_idx;
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -115,6 +117,15 @@ extern WN* call_clEnqueueWriteBuffer(WN *p1, WN* p2, WN* p3, WN *p4, WN *p5,
 extern WN* call_clEnqueueWriteCleanBuffer(WN *p1, WN* p2, WN* p3, WN *p4, 
 					  WN *p5, WN* p6, WN *p7, WN *p8, WN *p9);
 extern WN* call_clReleaseMemObj(WN *p1);
+
+/* OpenCL kernel handling functions */
+
+extern WN* call_clCreateKernelRet(WN *p1, WN* p2, WN* p3, WN *p4);
+
+extern WN* call_clSetKernelArg(WN *p1, WN* p2, WN* p3, WN *p4);
+
+extern WN* call_clEnqueueNDRangeKernel(WN *p1, WN* p2, WN* p3, WN *p4, 
+				       WN *p5, WN* p6, WN *p7, WN *p8, WN *p9);
 
 /**
  * Access a particular field of the blockIdx variable.

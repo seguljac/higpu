@@ -142,6 +142,8 @@ TY_IDX uint3_ty_idx = TY_IDX_ZERO;
 TY_IDX cl_mem_ty_idx = TY_IDX_ZERO;
 TY_IDX cl_context_ty_idx = TY_IDX_ZERO;
 TY_IDX cl_command_queue_ty_idx = TY_IDX_ZERO;
+TY_IDX cl_kernel_ty_idx = TY_IDX_ZERO;
+TY_IDX cl_program_ty_idx = TY_IDX_ZERO;
 
 #if 0
 static TY_IDX
@@ -250,6 +252,12 @@ declare_cuda_types() {
 
     TY &ty2 = New_TY(cl_command_queue_ty_idx);
     TY_Init(ty2, 4, KIND_SCALAR, MTYPE_U4, Save_Str("cl_command_queue"));
+
+    TY &ty3 = New_TY(cl_kernel_ty_idx);
+    TY_Init(ty3, 4, KIND_SCALAR, MTYPE_U4, Save_Str("cl_kernel"));
+       
+    TY &ty4 = New_TY(cl_program_ty_idx);
+    TY_Init(ty4, 4, KIND_SCALAR, MTYPE_U4, Save_Str("cl_program"));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -572,6 +580,91 @@ declare_clReleaseMemObj() {
   setup_cuda_runtime_function(clReleaseMemObj_st_idx);
 }
 
+static ST_IDX clCreateKernelRet_st_idx = ST_IDX_ZERO;
+
+/**
+ * cl_kernel *clCreateKernel (cl_kernel *ret,
+ *                            cl_program program,
+ *                            const char *kernel_name,
+ *                            cl_int *errcode_ret)
+ **/
+static void 
+declare_clCreateKernelRet() {
+  TY_IDX const_char_ty_idx = MTYPE_To_TY(MTYPE_I1);
+  Set_TY_is_const(const_char_ty_idx);
+
+  clCreateKernelRet_st_idx = declare_function_va("clCreateKernelRet", "clCreateKernelRet.ty",
+					      MTYPE_To_TY(MTYPE_V),
+					      4,
+					      Make_Pointer_Type(cl_kernel_ty_idx),
+					      cl_program_ty_idx,
+					      Make_Pointer_Type(const_char_ty_idx),
+					      Make_Pointer_Type(MTYPE_To_TY(MTYPE_I4))
+					      );
+  
+  setup_cuda_runtime_function(clCreateKernelRet_st_idx);
+}
+
+static ST_IDX clSetKernelArg_st_idx = ST_IDX_ZERO;
+
+/**
+ * cl_int clSetKernelArg (cl_kernel kernel,
+ *                        cl_uint arg_index,
+ *                        size_t arg_size,
+ *                        const void *arg_value)
+ **/
+static void declare_clSetKernelArg()
+{
+ TY_IDX const_void_ty_idx = MTYPE_To_TY(MTYPE_V);
+ Set_TY_is_const(const_void_ty_idx);
+
+  clSetKernelArg_st_idx = declare_function_va("clSetKernelArg", "clSetKernelArg.ty",
+					      MTYPE_To_TY(MTYPE_I4),
+					      4,
+					      cl_kernel_ty_idx,
+					      MTYPE_To_TY(MTYPE_U4),
+					      MTYPE_To_TY(MTYPE_U4),
+					      Make_Pointer_Type(const_void_ty_idx)
+					      );
+					  
+  setup_cuda_runtime_function(clSetKernelArg_st_idx);
+}
+
+static ST_IDX clEnqueueNDRangeKernel_st_idx = ST_IDX_ZERO;
+
+/**
+ * cl_int *clEnqueueNDRangeKernel (cl_command_queue command_queue,
+ *                                 cl_kernel kernel,
+ *                                 cl_uint work_dim,
+ *                                 const size_t *global_work_offset,
+ *                                 const size_t *global_work_size,
+ *                                 const size_t *local_work_size,
+ *                                 cl_uint num_events_in_wait_list,
+ *                                 const cl_event *event_wait_list,
+ *                                 cl_event *event)
+ **/
+static void 
+declare_clEnqueueNDRangeKernel() {
+  TY_IDX const_uint_ty_idx = MTYPE_To_TY(MTYPE_U4);
+  Set_TY_is_const(const_uint_ty_idx);
+
+  clEnqueueNDRangeKernel_st_idx = declare_function_va("clEnqueueNDRangeKernel", "clEnqueueNDRangeKernel.ty",
+						      MTYPE_To_TY(MTYPE_I4),
+						      9,
+						      cl_command_queue_ty_idx,
+						      cl_kernel_ty_idx,
+						      MTYPE_To_TY(MTYPE_U4),
+						      Make_Pointer_Type(const_uint_ty_idx),
+						      Make_Pointer_Type(const_uint_ty_idx),
+						      Make_Pointer_Type(const_uint_ty_idx),
+						      MTYPE_To_TY(MTYPE_U4),
+						      Make_Pointer_Type(MTYPE_To_TY(MTYPE_V)),
+						      Make_Pointer_Type(MTYPE_To_TY(MTYPE_V))
+						    );
+  
+  setup_cuda_runtime_function(clEnqueueNDRangeKernel_st_idx);
+}
+
 /**
  * Declare CUDA function prototypes.
  * Called by init_cuda_includes
@@ -592,6 +685,9 @@ static void declare_cuda_functions()
     declare_clEnqueueWriteBuffer();
     declare_clEnqueueWriteCleanBuffer();
     declare_clReleaseMemObj();
+    declare_clCreateKernelRet();
+    declare_clSetKernelArg();
+    declare_clEnqueueNDRangeKernel();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -915,6 +1011,92 @@ call_clReleaseMemObj(WN *p1) {
   
   // Construct the arguments.
   WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+
+  return wn;
+}
+
+
+WN* 
+call_clCreateKernelRet(WN *p1, WN* p2, WN* p3, WN *p4) {
+  // Get the function symbol.
+  assert(clCreateKernelRet_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clCreateKernelRet_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];
+  TY_IDX p2_ty_idx = Tylist_Table[param_tyl_idx+1];
+  TY_IDX p3_ty_idx = Tylist_Table[param_tyl_idx+2]; 
+  TY_IDX p4_ty_idx = Tylist_Table[param_tyl_idx+3];
+
+  WN *wn = WN_Call(MTYPE_V, MTYPE_V, 4, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+  WN_kid1(wn) = HCWN_Parm(TY_mtype(p2_ty_idx), p2, p2_ty_idx);
+  WN_kid2(wn) = HCWN_Parm(TY_mtype(p3_ty_idx), p3, p3_ty_idx);
+  WN_kid3(wn) = HCWN_Parm(TY_mtype(p4_ty_idx), p4, p4_ty_idx);
+
+  return wn;
+}
+
+WN* 
+call_clSetKernelArg(WN *p1, WN* p2, WN* p3, WN *p4) {
+  // Get the function symbol.
+  assert(clSetKernelArg_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clSetKernelArg_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];
+  TY_IDX p2_ty_idx = Tylist_Table[param_tyl_idx+1];
+  TY_IDX p3_ty_idx = Tylist_Table[param_tyl_idx+2];
+  TY_IDX p4_ty_idx = Tylist_Table[param_tyl_idx+3];;  
+
+  WN *wn = WN_Call(MTYPE_V, MTYPE_V, 4, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+  WN_kid1(wn) = HCWN_Parm(TY_mtype(p2_ty_idx), p2, p2_ty_idx);
+  WN_kid2(wn) = HCWN_Parm(TY_mtype(p3_ty_idx), p3, p3_ty_idx);
+  WN_kid(wn, 3) = HCWN_Parm(TY_mtype(p4_ty_idx), p4, p4_ty_idx);
+
+  return wn;
+}
+
+WN* 
+call_clEnqueueNDRangeKernel(WN *p1, WN* p2, WN* p3, WN *p4, WN *p5, WN *p6, WN *p7, WN *p8, WN *p9) {
+  // Get the function symbol.
+  assert(clEnqueueNDRangeKernel_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clEnqueueNDRangeKernel_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];
+  TY_IDX p2_ty_idx = Tylist_Table[param_tyl_idx+1];
+  TY_IDX p3_ty_idx = Tylist_Table[param_tyl_idx+2];
+  TY_IDX p4_ty_idx = Tylist_Table[param_tyl_idx+3];
+  TY_IDX p5_ty_idx = Tylist_Table[param_tyl_idx+4];  
+  TY_IDX p6_ty_idx = Tylist_Table[param_tyl_idx+5];
+  TY_IDX p7_ty_idx = Tylist_Table[param_tyl_idx+6];
+  TY_IDX p8_ty_idx = Tylist_Table[param_tyl_idx+7];  
+  TY_IDX p9_ty_idx = Tylist_Table[param_tyl_idx+8];
+  
+  WN *wn = WN_Call(MTYPE_V, MTYPE_V, 9, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+  WN_kid1(wn) = HCWN_Parm(TY_mtype(p2_ty_idx), p2, p2_ty_idx);
+  WN_kid2(wn) = HCWN_Parm(TY_mtype(p3_ty_idx), p3, p3_ty_idx);
+  WN_kid(wn, 3) = HCWN_Parm(TY_mtype(p4_ty_idx), p4, p4_ty_idx);
+  WN_kid(wn, 4) = HCWN_Parm(TY_mtype(p5_ty_idx), p5, p5_ty_idx);
+  WN_kid(wn, 5) = HCWN_Parm(TY_mtype(p6_ty_idx), p6, p6_ty_idx);
+  WN_kid(wn, 6) = HCWN_Parm(TY_mtype(p7_ty_idx), p7, p7_ty_idx);
+  WN_kid(wn, 7) = HCWN_Parm(TY_mtype(p8_ty_idx), p8, p8_ty_idx);
+  WN_kid(wn, 8) = HCWN_Parm(TY_mtype(p9_ty_idx), p9, p9_ty_idx);
 
   return wn;
 }
