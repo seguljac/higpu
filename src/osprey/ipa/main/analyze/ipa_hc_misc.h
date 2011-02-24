@@ -65,6 +65,9 @@ private:
     ST_IDX _s_cs_ofst_st_idx;
     ST_IDX _thr_ofst_st_idx;
 
+    // OpenCL cl_kernel local variable
+    ST_IDX _cl_kernel_st_idx; 
+
     MEM_POOL *_pool;
 
     ST_IDX get_sym(ST_IDX& st_idx, const char *st_name, TY_IDX ty_idx);
@@ -107,6 +110,9 @@ public:
         _g_cs_ofst_st_idx = ST_IDX_ZERO;
         _s_cs_ofst_st_idx = ST_IDX_ZERO;
         _thr_ofst_st_idx = ST_IDX_ZERO;
+
+	// OpenCL cl_kernel local variable
+	_cl_kernel_st_idx = ST_IDX_ZERO; 
     }
 
     ~HC_LOCAL_VAR_STORE() {}
@@ -210,6 +216,8 @@ public:
         return get_sym(_thr_ofst_st_idx, "thr_ofst",
                 MTYPE_To_TY(Integer_type));
     }
+    // OpenCL cl_kernel local variable
+    ST_IDX get_cl_kernel_sym();
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -231,11 +239,21 @@ private:
     // the single global shared memory variable
     ST_IDX _smem_st_idx;
 
+    // OpenCL global variable
+    ST_IDX _cl_program_st_idx; 
+    ST_IDX _cl_command_queue_st_idx; 
+
+    // OpenCL constants
+    ST_IDX _cl_null_st_idx; 
+
 public:
 
     HC_GLOBAL_VAR_STORE()
     {
         _cmem_st_idx = ST_IDX_ZERO;
+	// OpenCL global variables
+	_cl_program_st_idx = ST_IDX_ZERO;
+	_cl_command_queue_st_idx = ST_IDX_ZERO;
     }
     ~HC_GLOBAL_VAR_STORE() {}
 
@@ -253,6 +271,38 @@ public:
     {
         Is_True(_smem_st_idx != ST_IDX_ZERO, (""));
         return _smem_st_idx;
+    }
+
+    // OpenCL global variables
+    ST_IDX create_cl_program_sym();
+
+    ST_IDX get_cl_program_sym()
+    {
+      if (_cl_program_st_idx == ST_IDX_ZERO){
+	create_cl_program_sym();
+      }
+      return _cl_program_st_idx;
+    }
+
+    ST_IDX create_cl_command_queue_sym();
+
+    ST_IDX get_cl_command_queue_sym()
+    {
+      if (_cl_command_queue_st_idx == ST_IDX_ZERO){
+	create_cl_command_queue_sym();
+      }
+      return _cl_command_queue_st_idx;
+    }
+
+    // OpenCL constants
+    ST_IDX create_cl_null_sym();
+
+    ST_IDX get_cl_null_sym() 
+    {
+     if (_cl_null_st_idx == ST_IDX_ZERO){
+	create_cl_null_sym();
+      }
+      return _cl_null_st_idx;
     }
 };
 

@@ -80,6 +80,12 @@ ST_IDX HC_LOCAL_VAR_STORE::get_tblk_dim_sym()
     return get_sym(_tblk_dim_st_idx, "dimBlock", dim3_ty_idx);
 }
 
+// OpenCL local variables
+ST_IDX HC_LOCAL_VAR_STORE::get_cl_kernel_sym()
+{
+    Is_True(cl_kernel_ty_idx != TY_IDX_ZERO, (""));
+    return get_sym(_cl_kernel_st_idx, "__cl_kernel", cl_kernel_ty_idx);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -138,5 +144,33 @@ ST_IDX HC_GLOBAL_VAR_STORE::create_smem_sym(UINT elem_sz)
 
     return _smem_st_idx;
 }
+
+// OpenCL global variables
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_program_sym()
+{
+    Is_True(_cl_program_st_idx == ST_IDX_ZERO, (""));
+    _cl_program_st_idx = new_global_var("__cl_program", cl_program_ty_idx);
+    return _cl_program_st_idx;
+}
+
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_command_queue_sym()
+{
+    Is_True(_cl_command_queue_st_idx == ST_IDX_ZERO, (""));
+    _cl_command_queue_st_idx = new_global_var("__cl_queue", cl_command_queue_ty_idx);
+    return _cl_command_queue_st_idx;
+}
+
+// OpenCL constants
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_null_sym()
+{
+    Is_True(_cl_null_st_idx == ST_IDX_ZERO, (""));
+    _cl_null_st_idx = new_extern_var("NULL", Make_Pointer_Type(MTYPE_To_TY(MTYPE_U4)));	
+    set_st_attr_is_cuda_runtime(_cl_null_st_idx);
+    return _cl_null_st_idx;
+}
+
 
 /*** DAVID CODE END ***/

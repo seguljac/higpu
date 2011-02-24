@@ -30,6 +30,12 @@
 #include "ipo_clone.h"      // IPO_Clone
 #endif  // IPA_HICUDA
 
+extern BOOL flag_opencl;
+// Needed by OpenCl, New_Const_Sym
+#include "const.h"
+// Needed for OpenCL global variables
+#include "ipa_hc_misc.h"
+
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
@@ -2103,11 +2109,21 @@ static void HC_insert_kernel_calls(WN *wn, IPA_NODE *node)
         // Intialize the grid dimension variable first.
         for (int i = 0; i < 3; ++i)
         {
+	  if (flag_opencl){ 
+	    // For open cl grid (global) size is the total number of threads, not blocks
+	    // hence gridDimx = grid_dim_x X blk_dim_x
+	    WN_INSERT_BlockLast(replacement, 
+				HCWN_StidStructField(grid_dim_st_idx, i+1,
+						     WN_Mpy(Integer_type,
+							    WN_COPY_Tree(kinfo->get_grid_dim(i)),
+							    WN_COPY_Tree(kinfo->get_blk_dim(i)))));
+	  } else {
             WN_INSERT_BlockLast(replacement, 
                     HCWN_StidStructField(grid_dim_st_idx, i+1,
                         WN_COPY_Tree(kinfo->get_grid_dim(i))));
+	  }
         }
-        // Intialize the grid dimension variable first.
+        // Intialize the block dimension variable second.
         for (int i = 0; i < 3; ++i)
         {
             WN_INSERT_BlockLast(replacement,
@@ -2119,6 +2135,50 @@ static void HC_insert_kernel_calls(WN *wn, IPA_NODE *node)
         HC_SYM_LIST *kactuals = kinfo->get_kernel_params();
         UINT n_actuals = kactuals->Elements();
 
+	if (flag_opencl){  
+
+	  // Generate string expression for the funtion name in name_wn
+	  char *st_name = ST_name(kfunc_st_idx);
+	  TCON tcon = Host_To_Targ_String(MTYPE_STRING, st_name, strlen(st_name));
+	  TY_IDX cc_ty_idx = MTYPE_To_TY(MTYPE_I1);
+	  Set_TY_is_const(cc_ty_idx);
+	  TY_IDX ccs_ty_idx = Make_Pointer_Type(cc_ty_idx);
+	  ST *name_st = New_Const_Sym(Enter_tcon(tcon), ccs_ty_idx);
+	  WN *name_wn = WN_LdaZeroOffset(ST_st_idx(name_st), ccs_ty_idx);
+	  
+	  // Insert clCreateKernelRet call
+	  WN *clCreateKernel_wn = call_clCreateKernelRet(WN_LdaZeroOffset(lvar_store->get_cl_kernel_sym()),
+							 WN_LdidScalar(hc_glob_var_store.get_cl_program_sym()), 
+							 name_wn,
+							 WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()));
+	  
+	  WN_INSERT_BlockLast(replacement, clCreateKernel_wn);
+	  
+	  // Set kernel arguments
+	  for (int i = 0; i < n_actuals; ++i){
+	    ST_IDX actual_st_idx = (*kactuals)[i];
+	    WN *ldid_wn = WN_LdaZeroOffset(actual_st_idx);
+	    WN *clSetKernelArg_wn = call_clSetKernelArg(WN_LdidScalar(lvar_store->get_cl_kernel_sym()), 
+							WN_Intconst(Integer_type, i),
+							WN_Intconst(Integer_type,  TY_size(ST_type(actual_st_idx))),
+							ldid_wn);
+	    WN_INSERT_BlockLast(replacement, clSetKernelArg_wn);
+	  }
+
+	  // Insert clEnqueueNDRangeKernel call
+	  WN *clEnqueueNDRangeKernel_wn = call_clEnqueueNDRangeKernel(WN_LdidScalar(hc_glob_var_store.get_cl_command_queue_sym()),
+								      WN_LdidScalar(lvar_store->get_cl_kernel_sym()),
+								      WN_Intconst(Integer_type, 3),
+								      WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()),
+								      WN_LdaZeroOffset(grid_dim_st_idx),
+								      WN_LdaZeroOffset(tblk_dim_st_idx),
+								      WN_Zerocon(Integer_type),
+								      WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()),
+								      WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()));
+	  
+	  WN_INSERT_BlockLast(replacement, clEnqueueNDRangeKernel_wn);
+	} else {
+	
         // The kernel execution configuration is stored in the first few
         // regular parameters of the kernel function call.
         //
@@ -2154,9 +2214,9 @@ static void HC_insert_kernel_calls(WN *wn, IPA_NODE *node)
             WN_kid(kcall_wn, i+3) =
                 HCWN_Parm(WN_desc(ldid_wn), ldid_wn, ST_type(actual_st_idx));
         }
-
+				       
         WN_INSERT_BlockLast(replacement, kcall_wn);
-
+	}			       
         // Insert the block before the kernel region.
         WN *parent_wn = LWN_Get_Parent(wn);
         WN_INSERT_BlockBefore(parent_wn, wn, replacement);
