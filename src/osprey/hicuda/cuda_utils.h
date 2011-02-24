@@ -127,6 +127,10 @@ extern WN* call_clSetKernelArg(WN *p1, WN* p2, WN* p3, WN *p4);
 extern WN* call_clEnqueueNDRangeKernel(WN *p1, WN* p2, WN* p3, WN *p4, 
 				       WN *p5, WN* p6, WN *p7, WN *p8, WN *p9);
 
+/* OpenCL synchronization functions */
+
+extern WN* call_clBarrier(WN *p1);
+
 /**
  * Access a particular field of the blockIdx variable.
  * 'field_id' is zero-based.

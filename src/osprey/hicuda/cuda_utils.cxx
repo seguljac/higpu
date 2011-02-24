@@ -665,6 +665,22 @@ declare_clEnqueueNDRangeKernel() {
   setup_cuda_runtime_function(clEnqueueNDRangeKernel_st_idx);
 }
 
+static ST_IDX clBarrier_st_idx = ST_IDX_ZERO;
+
+/**
+ * void barrier (cl_mem_fence_flags flags)
+ **/
+static void declare_clBarrier()
+{
+  clBarrier_st_idx = declare_function_va("barrier", "barrier.ty",
+					 MTYPE_To_TY(MTYPE_V),
+					 1,
+					 MTYPE_To_TY(MTYPE_U4)
+					 );
+  
+  setup_cuda_runtime_function(clBarrier_st_idx);
+}
+
 /**
  * Declare CUDA function prototypes.
  * Called by init_cuda_includes
@@ -688,6 +704,7 @@ static void declare_cuda_functions()
     declare_clCreateKernelRet();
     declare_clSetKernelArg();
     declare_clEnqueueNDRangeKernel();
+    declare_clBarrier();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -1097,6 +1114,25 @@ call_clEnqueueNDRangeKernel(WN *p1, WN* p2, WN* p3, WN *p4, WN *p5, WN *p6, WN *
   WN_kid(wn, 6) = HCWN_Parm(TY_mtype(p7_ty_idx), p7, p7_ty_idx);
   WN_kid(wn, 7) = HCWN_Parm(TY_mtype(p8_ty_idx), p8, p8_ty_idx);
   WN_kid(wn, 8) = HCWN_Parm(TY_mtype(p9_ty_idx), p9, p9_ty_idx);
+
+  return wn;
+}
+
+WN* 
+call_clBarrier(WN *p1) {
+  // Get the function symbol.
+  assert(clBarrier_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clBarrier_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];  
+
+  WN *wn = WN_Call(MTYPE_V, MTYPE_V, 1, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
 
   return wn;
 }
