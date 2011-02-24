@@ -77,6 +77,11 @@ extern ST_IDX threadIdxZ_st_idx;
 extern TY_IDX dim3_ty_idx;
 extern TY_IDX uint3_ty_idx;
 
+// OpenCL types
+extern TY_IDX cl_mem_ty_idx;
+extern TY_IDX cl_context_ty_idx;
+extern TY_IDX cl_command_queue_ty_idx;
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
@@ -98,6 +103,18 @@ extern WN* call_cudaMemset(WN *dst_wn, WN *value_wn, WN *count_wn);
 extern WN* call_cudaFree(WN *ptr);
 
 extern WN* call_syncthreads();
+
+/* OpenCL memory handling functions */
+
+extern WN* call_clCreateBufferRet(WN *p1, WN* p2, WN* p3, WN *p4, 
+				  WN *p5, WN *p6);
+extern WN* call_clEnqueueReadBuffer(WN *p1, WN* p2, WN* p3, WN *p4, 
+				    WN *p5, WN* p6, WN *p7, WN *p8, WN* p9);
+extern WN* call_clEnqueueWriteBuffer(WN *p1, WN* p2, WN* p3, WN *p4, WN *p5, 
+				     WN* p6, WN *p7, WN *p8, WN *p9);
+extern WN* call_clEnqueueWriteCleanBuffer(WN *p1, WN* p2, WN* p3, WN *p4, 
+					  WN *p5, WN* p6, WN *p7, WN *p8, WN *p9);
+extern WN* call_clReleaseMemObj(WN *p1);
 
 /**
  * Access a particular field of the blockIdx variable.

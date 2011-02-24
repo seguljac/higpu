@@ -138,6 +138,11 @@ declare_cuda_scalar_types() {
 TY_IDX dim3_ty_idx = TY_IDX_ZERO;
 TY_IDX uint3_ty_idx = TY_IDX_ZERO;
 
+// OpenCL types
+TY_IDX cl_mem_ty_idx = TY_IDX_ZERO;
+TY_IDX cl_context_ty_idx = TY_IDX_ZERO;
+TY_IDX cl_command_queue_ty_idx = TY_IDX_ZERO;
+
 #if 0
 static TY_IDX
 get_cuda_type(const char *ty_name, UINT32 align_bytes) {
@@ -235,6 +240,16 @@ declare_cuda_types() {
 
     dim3_ty_idx = declare_cuda_dim3();
     uint3_ty_idx = declare_cuda_uint3();
+
+    // Declare OpenCL types
+    TY &ty0 = New_TY(cl_mem_ty_idx);
+    TY_Init(ty0, 4, KIND_SCALAR, MTYPE_U4, Save_Str("cl_mem"));
+
+    TY &ty1 = New_TY(cl_context_ty_idx);
+    TY_Init(ty1, 4, KIND_SCALAR, MTYPE_U4, Save_Str("cl_context"));
+
+    TY &ty2 = New_TY(cl_command_queue_ty_idx);
+    TY_Init(ty2, 4, KIND_SCALAR, MTYPE_U4, Save_Str("cl_command_queue"));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -417,18 +432,166 @@ declare_syncthreads() {
     setup_cuda_runtime_function(syncthreads_st_idx);
 }
 
+// OpenCL functions
+
+static ST_IDX clCreateBufferRet_st_idx = ST_IDX_ZERO;
+
+/**
+ *cl_mem clCreateBufferRet (cl_mem* ret
+ *                          cl_context context,
+ *                          cl_mem_flags flags, ----> unsigned int
+ *                          size_t size,        ----> unsigned int
+ *                          void *host_ptr,
+ *                          cl_int *errcode_ret) ----> int *
+ **/
+static void 
+declare_clCreateBufferRet() {
+  clCreateBufferRet_st_idx = declare_function_va("clCreateBufferRet", "clCreateBufferRet.ty",
+						 MTYPE_To_TY(MTYPE_V),
+						 6,
+						 Make_Pointer_Type(cl_mem_ty_idx),	 
+						 cl_context_ty_idx,
+						 MTYPE_To_TY(MTYPE_U4),
+						 MTYPE_To_TY(MTYPE_U4),
+						 Make_Pointer_Type(MTYPE_To_TY(MTYPE_V)),
+						 Make_Pointer_Type(MTYPE_To_TY(MTYPE_I4))
+						 );
+  
+  setup_cuda_runtime_function(clCreateBufferRet_st_idx);
+}
+
+static ST_IDX clEnqueueReadBuffer_st_idx = ST_IDX_ZERO;
+
+/**
+ *cl_int clEnqueueReadBuffer (cl_command_queue command_queue,
+ *                            cl_mem buffer,
+ *                            cl_bool blocking_read,
+ *                            size_t offset,
+ *                            size_t cb,
+ *                            void *ptr,
+ *                            cl_uint num_events_in_wait_list,
+ *                            const cl_event *event_wait_list, --> void *
+ *                            cl_event *event) --> void *
+ **/
+static void 
+declare_clEnqueueReadBuffer() {
+  clEnqueueReadBuffer_st_idx = declare_function_va("clEnqueueReadBuffer", "clEnqueueReadBuffer.ty",
+						   MTYPE_To_TY(MTYPE_I4),
+						   9,
+						   cl_command_queue_ty_idx,
+						   cl_mem_ty_idx,
+						   MTYPE_To_TY(MTYPE_U4),
+						   MTYPE_To_TY(MTYPE_U4),
+						   MTYPE_To_TY(MTYPE_U4),
+						   Make_Pointer_Type(MTYPE_To_TY(MTYPE_V)),
+						   MTYPE_To_TY(MTYPE_U4),
+						   Make_Pointer_Type(MTYPE_To_TY(MTYPE_V)),
+						   Make_Pointer_Type(MTYPE_To_TY(MTYPE_V))
+						   );
+  
+  setup_cuda_runtime_function(clEnqueueReadBuffer_st_idx);
+}
+
+static ST_IDX clEnqueueWriteBuffer_st_idx = ST_IDX_ZERO;
+
+/**
+ *cl_int clEnqueueWriteBuffer (cl_command_queue command_queue,
+ *                             cl_mem buffer,
+ *                             cl_bool blocking_write,
+ *                             size_t offset,
+ *                             size_t cb,
+ *                             const void *ptr,
+ *                             cl_uint num_events_in_wait_list,
+ *                             const cl_event *event_wait_list,
+ *                             const cl_event *event)
+ **/
+static void 
+declare_clEnqueueWriteBuffer() {
+  clEnqueueWriteBuffer_st_idx = declare_function_va("clEnqueueWriteBuffer", "clEnqueueWriteBuffer.ty",
+						    MTYPE_To_TY(MTYPE_I4),
+						    9,
+						    cl_command_queue_ty_idx,
+						    cl_mem_ty_idx,
+						    MTYPE_To_TY(MTYPE_U4),
+						    MTYPE_To_TY(MTYPE_U4),
+						    MTYPE_To_TY(MTYPE_U4),
+						    Make_Pointer_Type(MTYPE_To_TY(MTYPE_V)),
+						    MTYPE_To_TY(MTYPE_U4),
+						    Make_Pointer_Type(MTYPE_To_TY(MTYPE_V)),
+						    Make_Pointer_Type(MTYPE_To_TY(MTYPE_V))
+						    );
+  
+  setup_cuda_runtime_function(clEnqueueWriteBuffer_st_idx);
+}
+
+static ST_IDX clEnqueueWriteCleanBuffer_st_idx = ST_IDX_ZERO;
+
+/**
+ *cl_int clEnqueueWriteCleanBuffer (cl_command_queue command_queue,
+ *                                  cl_mem buffer,
+ *                                  cl_bool blocking_write,
+ *                                  size_t offset,
+ *                                  size_t cb,
+ *                                  const void *ptr,
+ *                                  cl_uint num_events_in_wait_list,
+ *                                  const cl_event *event_wait_list,
+ *                                  const cl_event *event)
+ **/
+static void 
+declare_clEnqueueWriteCleanBuffer() {
+  clEnqueueWriteCleanBuffer_st_idx = declare_function_va("clEnqueueWriteCleanBuffer", "clEnqueueWriteCleanBuffer.ty",
+						    MTYPE_To_TY(MTYPE_I4),
+						    9,
+						    cl_command_queue_ty_idx,
+						    cl_mem_ty_idx,
+						    MTYPE_To_TY(MTYPE_U4),
+						    MTYPE_To_TY(MTYPE_U4),
+						    MTYPE_To_TY(MTYPE_U4),
+						    Make_Pointer_Type(MTYPE_To_TY(MTYPE_V)),
+						    MTYPE_To_TY(MTYPE_U4),
+						    Make_Pointer_Type(MTYPE_To_TY(MTYPE_V)),
+						    Make_Pointer_Type(MTYPE_To_TY(MTYPE_V))
+						    );
+  
+  setup_cuda_runtime_function(clEnqueueWriteCleanBuffer_st_idx);
+}
+
+static ST_IDX clReleaseMemObj_st_idx = ST_IDX_ZERO;
+
+/**
+ * cl_int clReleaseMemObject (cl_mem memobj)
+ **/
+static void 
+declare_clReleaseMemObj() {
+  clReleaseMemObj_st_idx = declare_function_va("clReleaseMemObject", "clReleaseMemObject.ty",
+					       MTYPE_To_TY(MTYPE_I4),
+					       1,
+					       cl_mem_ty_idx
+					       );
+  
+  setup_cuda_runtime_function(clReleaseMemObj_st_idx);
+}
+
 /**
  * Declare CUDA function prototypes.
  * Called by init_cuda_includes
  */
 static void declare_cuda_functions()
 {
+    // Declare CUDA functions
     declare_cudaMemcpy();
     declare_cudaMemcpyToSymbol();
     declare_cudaMemset();
     declare_cudaMalloc();
     declare_cudaFree();
     declare_syncthreads();
+
+    // Declare OpenCL function
+    declare_clCreateBufferRet();  
+    declare_clEnqueueReadBuffer();
+    declare_clEnqueueWriteBuffer();
+    declare_clEnqueueWriteCleanBuffer();
+    declare_clReleaseMemObj();
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -599,6 +762,161 @@ call_cudaFree(WN *ptr) {
 WN*
 call_syncthreads() {
     return WN_Call(MTYPE_V, MTYPE_V, 0, syncthreads_st_idx);
+}
+
+// OpenCL function
+
+WN* 
+call_clCreateBufferRet(WN *p1, WN* p2, WN* p3, WN *p4, WN *p5, WN *p6) {
+  // Get the function symbol.
+  assert(clCreateBufferRet_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clCreateBufferRet_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];
+  TY_IDX p2_ty_idx = Tylist_Table[param_tyl_idx+1];
+  TY_IDX p3_ty_idx = Tylist_Table[param_tyl_idx+2];
+  TY_IDX p4_ty_idx = Tylist_Table[param_tyl_idx+3];
+  TY_IDX p5_ty_idx = Tylist_Table[param_tyl_idx+4];  
+  TY_IDX p6_ty_idx = Tylist_Table[param_tyl_idx+5];
+
+  WN *wn = WN_Call(MTYPE_U4, MTYPE_V, 6, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+  WN_kid1(wn) = HCWN_Parm(TY_mtype(p2_ty_idx), p2, p2_ty_idx);
+  WN_kid2(wn) = HCWN_Parm(TY_mtype(p3_ty_idx), p3, p3_ty_idx);
+  WN_kid(wn, 3) = HCWN_Parm(TY_mtype(p4_ty_idx), p4, p4_ty_idx);
+  WN_kid(wn, 4) = HCWN_Parm(TY_mtype(p5_ty_idx), p5, p5_ty_idx);
+  WN_kid(wn, 5) = HCWN_Parm(TY_mtype(p6_ty_idx), p6, p6_ty_idx);
+
+  return wn;
+}
+
+WN* 
+call_clEnqueueReadBuffer(WN *p1, WN* p2, WN* p3, WN *p4, WN *p5, WN *p6, WN *p7, WN *p8, WN *p9) {
+  // Get the function symbol.
+  assert(clEnqueueReadBuffer_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clEnqueueReadBuffer_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];
+  TY_IDX p2_ty_idx = Tylist_Table[param_tyl_idx+1];
+  TY_IDX p3_ty_idx = Tylist_Table[param_tyl_idx+2];
+  TY_IDX p4_ty_idx = Tylist_Table[param_tyl_idx+3];
+  TY_IDX p5_ty_idx = Tylist_Table[param_tyl_idx+4];  
+  TY_IDX p6_ty_idx = Tylist_Table[param_tyl_idx+5];
+  TY_IDX p7_ty_idx = Tylist_Table[param_tyl_idx+6];
+  TY_IDX p8_ty_idx = Tylist_Table[param_tyl_idx+7];  
+  TY_IDX p9_ty_idx = Tylist_Table[param_tyl_idx+8];
+  
+  WN *wn = WN_Call(MTYPE_V, MTYPE_V, 9, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+  WN_kid1(wn) = HCWN_Parm(TY_mtype(p2_ty_idx), p2, p2_ty_idx);
+  WN_kid2(wn) = HCWN_Parm(TY_mtype(p3_ty_idx), p3, p3_ty_idx);
+  WN_kid(wn, 3) = HCWN_Parm(TY_mtype(p4_ty_idx), p4, p4_ty_idx);
+  WN_kid(wn, 4) = HCWN_Parm(TY_mtype(p5_ty_idx), p5, p5_ty_idx);
+  WN_kid(wn, 5) = HCWN_Parm(TY_mtype(p6_ty_idx), p6, p6_ty_idx);
+  WN_kid(wn, 6) = HCWN_Parm(TY_mtype(p7_ty_idx), p7, p7_ty_idx);
+  WN_kid(wn, 7) = HCWN_Parm(TY_mtype(p8_ty_idx), p8, p8_ty_idx);
+  WN_kid(wn, 8) = HCWN_Parm(TY_mtype(p9_ty_idx), p9, p9_ty_idx);
+
+  return wn;
+}
+
+WN* 
+call_clEnqueueWriteBuffer(WN *p1, WN* p2, WN* p3, WN *p4, WN *p5, WN *p6, WN *p7, WN *p8, WN *p9) {
+  // Get the function symbol.
+  assert(clEnqueueWriteBuffer_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clEnqueueWriteBuffer_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];
+  TY_IDX p2_ty_idx = Tylist_Table[param_tyl_idx+1];
+  TY_IDX p3_ty_idx = Tylist_Table[param_tyl_idx+2];
+  TY_IDX p4_ty_idx = Tylist_Table[param_tyl_idx+3];
+  TY_IDX p5_ty_idx = Tylist_Table[param_tyl_idx+4];  
+  TY_IDX p6_ty_idx = Tylist_Table[param_tyl_idx+5];
+  TY_IDX p7_ty_idx = Tylist_Table[param_tyl_idx+6];
+  TY_IDX p8_ty_idx = Tylist_Table[param_tyl_idx+7];  
+  TY_IDX p9_ty_idx = Tylist_Table[param_tyl_idx+8];
+  
+  WN *wn = WN_Call(MTYPE_V, MTYPE_V, 9, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+  WN_kid1(wn) = HCWN_Parm(TY_mtype(p2_ty_idx), p2, p2_ty_idx);
+  WN_kid2(wn) = HCWN_Parm(TY_mtype(p3_ty_idx), p3, p3_ty_idx);
+  WN_kid(wn, 3) = HCWN_Parm(TY_mtype(p4_ty_idx), p4, p4_ty_idx);
+  WN_kid(wn, 4) = HCWN_Parm(TY_mtype(p5_ty_idx), p5, p5_ty_idx);
+  WN_kid(wn, 5) = HCWN_Parm(TY_mtype(p6_ty_idx), p6, p6_ty_idx);
+  WN_kid(wn, 6) = HCWN_Parm(TY_mtype(p7_ty_idx), p7, p7_ty_idx);
+  WN_kid(wn, 7) = HCWN_Parm(TY_mtype(p8_ty_idx), p8, p8_ty_idx);
+  WN_kid(wn, 8) = HCWN_Parm(TY_mtype(p9_ty_idx), p9, p9_ty_idx);
+
+  return wn;
+}
+
+WN* 
+call_clEnqueueWriteCleanBuffer(WN *p1, WN* p2, WN* p3, WN *p4, WN *p5, WN *p6, WN *p7, WN *p8, WN *p9) {
+  // Get the function symbol.
+  assert(clEnqueueWriteCleanBuffer_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clEnqueueWriteCleanBuffer_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];
+  TY_IDX p2_ty_idx = Tylist_Table[param_tyl_idx+1];
+  TY_IDX p3_ty_idx = Tylist_Table[param_tyl_idx+2];
+  TY_IDX p4_ty_idx = Tylist_Table[param_tyl_idx+3];
+  TY_IDX p5_ty_idx = Tylist_Table[param_tyl_idx+4];  
+  TY_IDX p6_ty_idx = Tylist_Table[param_tyl_idx+5];
+  TY_IDX p7_ty_idx = Tylist_Table[param_tyl_idx+6];
+  TY_IDX p8_ty_idx = Tylist_Table[param_tyl_idx+7];  
+  TY_IDX p9_ty_idx = Tylist_Table[param_tyl_idx+8];
+  
+  WN *wn = WN_Call(MTYPE_V, MTYPE_V, 9, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+  WN_kid1(wn) = HCWN_Parm(TY_mtype(p2_ty_idx), p2, p2_ty_idx);
+  WN_kid2(wn) = HCWN_Parm(TY_mtype(p3_ty_idx), p3, p3_ty_idx);
+  WN_kid(wn, 3) = HCWN_Parm(TY_mtype(p4_ty_idx), p4, p4_ty_idx);
+  WN_kid(wn, 4) = HCWN_Parm(TY_mtype(p5_ty_idx), p5, p5_ty_idx);
+  WN_kid(wn, 5) = HCWN_Parm(TY_mtype(p6_ty_idx), p6, p6_ty_idx);
+  WN_kid(wn, 6) = HCWN_Parm(TY_mtype(p7_ty_idx), p7, p7_ty_idx);
+  WN_kid(wn, 7) = HCWN_Parm(TY_mtype(p8_ty_idx), p8, p8_ty_idx);
+  WN_kid(wn, 8) = HCWN_Parm(TY_mtype(p9_ty_idx), p9, p9_ty_idx);
+
+  return wn;
+}
+
+WN* 
+call_clReleaseMemObj(WN *p1) {
+  // Get the function symbol.
+  assert(clReleaseMemObj_st_idx != ST_IDX_ZERO);
+  ST_IDX func_st_idx = clReleaseMemObj_st_idx;
+  
+  // Get the parameter types.
+  TY_IDX func_ty_idx = ST_pu_type(func_st_idx);
+  TYLIST_IDX param_tyl_idx = TY_parms(func_ty_idx);
+  TY_IDX p1_ty_idx = Tylist_Table[param_tyl_idx+0];  
+
+  WN *wn = WN_Call(MTYPE_V, MTYPE_V, 1, func_st_idx);
+  
+  // Construct the arguments.
+  WN_kid0(wn) = HCWN_Parm(TY_mtype(p1_ty_idx), p1, p1_ty_idx);
+
+  return wn;
 }
 
 ////////////////////////////////////////////////////////////////////////////
