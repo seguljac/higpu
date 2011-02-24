@@ -737,9 +737,14 @@ HC_SYM_LIST* HC_KERNEL_INFO::get_kernel_params()
         {
             HC_GPU_DATA *gdata = ai->get_gpu_data();
             Is_True(gdata != NULL, (""));
-            // Skip constant memory data because any reference is made
-            // directly to <cmem> in the local procedure.
-            if (gdata->get_type() == HC_CONSTANT_DATA) continue;
+	    if (flag_opencl){
+	      // For OpenCL do not skip constant memory data when seting up
+	      // kernel parameters
+	    } else {
+	      // Skip constant memory data because any reference is made
+	      // directly to <cmem> in the local procedure.
+	      if (gdata->get_type() == HC_CONSTANT_DATA) continue;
+	    }
 
             HC_GPU_VAR_INFO *gvi = gdata->get_gvar_info();
             Is_True(gvi != NULL, (""));
@@ -2043,6 +2048,38 @@ static void HC_outline_kernel(IPA_NODE *node, HC_KERNEL_INFO *kinfo)
     Set_PU_is_kernel(kpu);
     // Mark the function symbol too.
     set_st_attr_is_kernel(kfunc_st_idx);
+
+    if (flag_opencl){  
+      // Do not output definition of kernel function
+      set_st_attr_is_cuda_runtime(kfunc_st_idx);
+
+      // Mark all types used in the kernel
+      WN *k_wn = knode->Whirl_Tree();
+      for (WN_ITER *wni = WN_WALK_TreeIter(k_wn); wni != NULL;
+	   wni = WN_WALK_TreeNext(wni)){
+        WN *wn = WN_ITER_wn(wni);
+   	OPERATOR opr = WN_operator(wn);
+
+   	//printf("ALL\n");
+   	//dump_tree(wn);
+   	if (opr == OPR_LDID || opr == OPR_STID){
+   	  ST *st = WN_st(wn);
+   	  TY_IDX ty_idx = ST_type(st);
+   	  //dump_tree(wn);
+   	  if (TY_kind(ty_idx) == KIND_STRUCT){
+   	    Set_TY_is_used_in_kernel(ty_idx);
+   	    //printf(" Type: %d\n", ty_idx);
+   	  }
+   	  if (TY_kind(ty_idx) == KIND_POINTER || TY_kind(ty_idx) == KIND_POINTER){
+   	    TY_IDX base_ty_idx = TY_pointed(Ty_Table[ty_idx]);	
+   	    if (TY_kind(base_ty_idx) == KIND_STRUCT){
+   	      Set_TY_is_used_in_kernel(base_ty_idx);
+   	      //printf("   Base type: %d\n", base_ty_idx);
+   	    }
+   	  }
+   	}	
+      }
+    }
 
     // Extract the kernel body.
     WN *kernel_body = NULL;
