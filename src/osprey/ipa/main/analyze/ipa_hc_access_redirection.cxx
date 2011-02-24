@@ -1455,6 +1455,11 @@ static void HC_add_cvar_init_stmt(WN *blk_wn, HC_GPU_DATA *gdata)
     Is_True(gdata != NULL, (""));
     if (gdata->get_type() != HC_CONSTANT_DATA) return;
 
+    if (flag_opencl){ 
+      // Do nothing
+      return;
+    }
+
     HC_GPU_VAR_INFO *gvi = gdata->get_gvar_info();
     if (gvi->has_local_ref())
     {

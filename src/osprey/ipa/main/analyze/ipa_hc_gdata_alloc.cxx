@@ -15,6 +15,7 @@
 
 #include "hc_gpu_data.h"
 
+extern BOOL flag_opencl;
 
 /*****************************************************************************
  *
@@ -703,11 +704,15 @@ void IPA_HC_alloc_const_mem()
         }
         if (n_cmem_elems > 0)
         {
+	  if (flag_opencl){ 
+	    // Do nothing
+	  } else {
             // Allocate a global constant memory variable "cmem".
             hc_glob_var_store.create_cmem_sym(n_cmem_elems, max_elem_sz);
 
             // Save the allocation offset for each constant directive.
             IPA_HC_set_alloc_offset(TRUE, &ic_solver, max_elem_sz);
+	  }
         }
     }
     MEM_POOL_Pop(&tmp_pool);
@@ -1070,8 +1075,12 @@ void IPA_HC_alloc_shared_mem()
 
         if (need_smem)
         {
+	  if (flag_opencl){
+	    // Do nothing
+	  } else {
             // Allocate an external shared memory variable <smem>.
             hc_glob_var_store.create_smem_sym(max_elem_sz);
+	  }
         }
     }
     MEM_POOL_Pop(&tmp_pool);
