@@ -5,6 +5,8 @@
 
 #include "hc_utils.h"
 
+extern BOOL flag_opencl;
+
 // TODO: automatically generate these declarations?
 
 enum cudaError
@@ -60,8 +62,17 @@ enum cudaMemcpyKind
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
+// Indexing for CUDA
 extern ST_IDX blockIdx_st_idx;
 extern ST_IDX threadIdx_st_idx;
+
+// Indexing for OpenCL
+extern ST_IDX blockIdxX_st_idx;
+extern ST_IDX blockIdxY_st_idx;
+extern ST_IDX blockIdxZ_st_idx;
+extern ST_IDX threadIdxX_st_idx;
+extern ST_IDX threadIdxY_st_idx;
+extern ST_IDX threadIdxZ_st_idx;
 
 extern TY_IDX dim3_ty_idx;
 extern TY_IDX uint3_ty_idx;
@@ -94,7 +105,17 @@ extern WN* call_syncthreads();
  */
 inline WN* ldid_blockIdx(UINT32 field_id)
 {
+  if (flag_opencl){
+    if (field_id == 0){
+      return WN_LdidScalar(blockIdxX_st_idx);
+    } else if (field_id == 1){
+      return WN_LdidScalar(blockIdxY_st_idx);
+    } else {
+      return WN_LdidScalar(blockIdxZ_st_idx);
+    }
+  } else {
     return HCWN_LdidStructField(blockIdx_st_idx, field_id+1);
+  }
 }
 
 /**
@@ -103,7 +124,17 @@ inline WN* ldid_blockIdx(UINT32 field_id)
  */
 inline WN* ldid_threadIdx(UINT32 field_id)
 {
+  if (flag_opencl){
+    if (field_id == 0){
+      return WN_LdidScalar(threadIdxX_st_idx);
+    } else if (field_id == 1){
+      return WN_LdidScalar(threadIdxY_st_idx);
+    } else {
+      return WN_LdidScalar(threadIdxZ_st_idx);
+    }
+  } else {
     return HCWN_LdidStructField(threadIdx_st_idx, field_id+1);
+  }
 }
 
 /*****************************************************************************

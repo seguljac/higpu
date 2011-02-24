@@ -240,8 +240,17 @@ declare_cuda_types() {
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
+// Indexing for CUDA
 ST_IDX blockIdx_st_idx = ST_IDX_ZERO;
 ST_IDX threadIdx_st_idx = ST_IDX_ZERO;
+
+// Indexing for OpenCL
+ST_IDX blockIdxX_st_idx = ST_IDX_ZERO;
+ST_IDX blockIdxY_st_idx = ST_IDX_ZERO;
+ST_IDX blockIdxZ_st_idx = ST_IDX_ZERO;
+ST_IDX threadIdxX_st_idx = ST_IDX_ZERO;
+ST_IDX threadIdxY_st_idx = ST_IDX_ZERO;
+ST_IDX threadIdxZ_st_idx = ST_IDX_ZERO;
 
 /* Declare blockIdx and threadIdx */
 static void
@@ -261,9 +270,23 @@ declare_block_thread_idx() {
     // Set_ST_is_temp_var(blockIdx_st);
     // Set_ST_is_temp_var(threadIdx_st);
 
+    blockIdxX_st_idx = new_extern_var("blockIdxX", MTYPE_To_TY(MTYPE_U4));
+    blockIdxY_st_idx = new_extern_var("blockIdxY", MTYPE_To_TY(MTYPE_U4));
+    blockIdxZ_st_idx = new_extern_var("blockIdxZ", MTYPE_To_TY(MTYPE_U4));
+    threadIdxX_st_idx = new_extern_var("threadIdxX", MTYPE_To_TY(MTYPE_U4));
+    threadIdxY_st_idx = new_extern_var("threadIdxY", MTYPE_To_TY(MTYPE_U4));
+    threadIdxZ_st_idx = new_extern_var("threadIdxZ", MTYPE_To_TY(MTYPE_U4));
+    
     // Now we have a dedicated attribute.
     set_st_attr_is_cuda_runtime(blockIdx_st_idx);
     set_st_attr_is_cuda_runtime(threadIdx_st_idx);
+
+    set_st_attr_is_cuda_runtime(blockIdxX_st_idx);
+    set_st_attr_is_cuda_runtime(blockIdxY_st_idx);
+    set_st_attr_is_cuda_runtime(blockIdxZ_st_idx);
+    set_st_attr_is_cuda_runtime(threadIdxX_st_idx);
+    set_st_attr_is_cuda_runtime(threadIdxY_st_idx);
+    set_st_attr_is_cuda_runtime(threadIdxZ_st_idx);
 }
 
 ////////////////////////////////////////////////////////////////////////////
