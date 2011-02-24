@@ -242,9 +242,16 @@ private:
     // OpenCL global variable
     ST_IDX _cl_program_st_idx; 
     ST_IDX _cl_command_queue_st_idx; 
+    ST_IDX _cl_context_st_idx; 
 
     // OpenCL constants
     ST_IDX _cl_null_st_idx; 
+    ST_IDX _cl_local_mem_fence_st_idx;
+    ST_IDX _cl_false_st_idx;
+    ST_IDX _cl_true_st_idx;
+    ST_IDX _cl_mem_read_write_st_idx;
+    ST_IDX _cl_mem_read_only_st_idx;
+    ST_IDX _cl_mem_copy_host_ptr_st_idx;
 
 public:
 
@@ -254,6 +261,7 @@ public:
 	// OpenCL global variables
 	_cl_program_st_idx = ST_IDX_ZERO;
 	_cl_command_queue_st_idx = ST_IDX_ZERO;
+	_cl_context_st_idx = ST_IDX_ZERO;
     }
     ~HC_GLOBAL_VAR_STORE() {}
 
@@ -294,6 +302,16 @@ public:
       return _cl_command_queue_st_idx;
     }
 
+    ST_IDX create_cl_context_sym();
+
+    ST_IDX get_cl_context_sym()
+    {
+      if (_cl_context_st_idx == ST_IDX_ZERO){
+	create_cl_context_sym();
+      }
+      return _cl_context_st_idx;
+    }
+
     // OpenCL constants
     ST_IDX create_cl_null_sym();
 
@@ -303,6 +321,66 @@ public:
 	create_cl_null_sym();
       }
       return _cl_null_st_idx;
+    }
+
+    ST_IDX create_cl_local_mem_fence_sym();
+
+    ST_IDX get_cl_local_mem_fence_sym() 
+    {
+     if (_cl_local_mem_fence_st_idx == ST_IDX_ZERO){
+	create_cl_local_mem_fence_sym();
+      }
+     return _cl_local_mem_fence_st_idx;
+    }
+
+    ST_IDX create_cl_false_sym();
+
+    ST_IDX get_cl_false_sym() 
+    {
+     if (_cl_false_st_idx == ST_IDX_ZERO){
+	create_cl_false_sym();
+      }
+      return _cl_false_st_idx;
+    }
+
+    ST_IDX create_cl_true_sym();
+
+    ST_IDX get_cl_true_sym() 
+    {
+     if (_cl_true_st_idx == ST_IDX_ZERO){
+	create_cl_true_sym();
+      }
+      return _cl_true_st_idx;
+    }
+
+    ST_IDX create_cl_mem_read_write_sym();
+
+    ST_IDX get_cl_mem_read_write_sym() 
+    {
+     if (_cl_mem_read_write_st_idx == ST_IDX_ZERO){
+	create_cl_mem_read_write_sym();
+      }
+      return _cl_mem_read_write_st_idx;
+    }
+
+    ST_IDX create_cl_mem_read_only_sym();
+
+    ST_IDX get_cl_mem_read_only_sym() 
+    {
+     if (_cl_mem_read_only_st_idx == ST_IDX_ZERO){
+	create_cl_mem_read_only_sym();
+      }
+      return _cl_mem_read_only_st_idx;
+    }
+
+    ST_IDX create_cl_mem_copy_host_ptr_sym();
+
+    ST_IDX get_cl_mem_copy_host_ptr_sym() 
+    {
+     if (_cl_mem_copy_host_ptr_st_idx == ST_IDX_ZERO){
+	create_cl_mem_copy_host_ptr_sym();
+      }
+      return _cl_mem_copy_host_ptr_st_idx;
     }
 };
 

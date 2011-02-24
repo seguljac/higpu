@@ -793,9 +793,6 @@ BOOL HC_lower_loop_part_region(WN *region, HC_LOOP_PART_INFO *lpi,
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-// Symbol for CLK_LOCAL_MEM_FENCE constant
-static ST_IDX cl_local_mem_fence_st_idx = ST_IDX_ZERO;
-
 WN* HC_lower_barrier(WN *pragma_wn, WN *parent_wn, BOOL gen_code)
 {
     if (Get_Trace(TKIND_DEBUG, TDEBUG_HICUDA))
@@ -812,13 +809,9 @@ WN* HC_lower_barrier(WN *pragma_wn, WN *parent_wn, BOOL gen_code)
     if (gen_code)
     {
       if (flag_opencl){
-	if (cl_local_mem_fence_st_idx == ST_IDX_ZERO){
-	  cl_local_mem_fence_st_idx = new_extern_var("CLK_LOCAL_MEM_FENCE", MTYPE_To_TY(MTYPE_U4));
-	  set_st_attr_is_cuda_runtime(cl_local_mem_fence_st_idx);	 
-	}
 	// Insert a call to barrier before the pragma.	
 	WN_INSERT_BlockBefore(parent_wn, pragma_wn, 
-			      call_clBarrier(WN_LdidScalar(cl_local_mem_fence_st_idx)));
+			      call_clBarrier(WN_LdidScalar(hc_glob_var_store.get_cl_local_mem_fence_sym())));
       } else {
         // Insert a call to __syncthreads before the pragma.
         WN_INSERT_BlockBefore(parent_wn, pragma_wn, call_syncthreads());

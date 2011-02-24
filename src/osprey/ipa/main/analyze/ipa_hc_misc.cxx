@@ -162,6 +162,13 @@ ST_IDX HC_GLOBAL_VAR_STORE::create_cl_command_queue_sym()
     return _cl_command_queue_st_idx;
 }
 
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_context_sym()
+{
+    Is_True(_cl_command_queue_st_idx == ST_IDX_ZERO, (""));
+    _cl_context_st_idx = new_global_var("__cl_context", cl_context_ty_idx);
+    return _cl_context_st_idx;
+}
+
 // OpenCL constants
 
 ST_IDX HC_GLOBAL_VAR_STORE::create_cl_null_sym()
@@ -170,6 +177,54 @@ ST_IDX HC_GLOBAL_VAR_STORE::create_cl_null_sym()
     _cl_null_st_idx = new_extern_var("NULL", Make_Pointer_Type(MTYPE_To_TY(MTYPE_U4)));	
     set_st_attr_is_cuda_runtime(_cl_null_st_idx);
     return _cl_null_st_idx;
+}
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_local_mem_fence_sym()
+{
+    Is_True(_cl_local_mem_fence_st_idx == ST_IDX_ZERO, (""));
+    _cl_local_mem_fence_st_idx = new_extern_var("CLK_LOCAL_MEM_FENCE", MTYPE_To_TY(MTYPE_U4));	
+    set_st_attr_is_cuda_runtime(_cl_local_mem_fence_st_idx);
+    return _cl_local_mem_fence_st_idx;
+}
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_false_sym()
+{
+    Is_True(_cl_false_st_idx == ST_IDX_ZERO, (""));
+    _cl_false_st_idx = new_extern_var("CL_FALSE", MTYPE_To_TY(MTYPE_U4));	
+    set_st_attr_is_cuda_runtime(_cl_false_st_idx);
+    return _cl_false_st_idx;
+}
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_true_sym()
+{
+    Is_True(_cl_true_st_idx == ST_IDX_ZERO, (""));
+    _cl_true_st_idx = new_extern_var("CL_TRUE",MTYPE_To_TY(MTYPE_U4));	
+    set_st_attr_is_cuda_runtime(_cl_true_st_idx);
+    return _cl_true_st_idx;
+}
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_mem_read_write_sym()
+{
+    Is_True(_cl_mem_read_write_st_idx == ST_IDX_ZERO, (""));
+    _cl_mem_read_write_st_idx = new_extern_var("CL_MEM_READ_WRITE", MTYPE_To_TY(MTYPE_U4));	
+    set_st_attr_is_cuda_runtime(_cl_mem_read_write_st_idx);
+    return _cl_mem_read_write_st_idx;
+}
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_mem_read_only_sym()
+{
+    Is_True(_cl_mem_read_only_st_idx == ST_IDX_ZERO, (""));
+    _cl_mem_read_only_st_idx = new_extern_var("CL_MEM_READ_ONLY", MTYPE_To_TY(MTYPE_U4));	
+    set_st_attr_is_cuda_runtime(_cl_mem_read_only_st_idx);
+    return _cl_mem_read_only_st_idx;
+}
+
+ST_IDX HC_GLOBAL_VAR_STORE::create_cl_mem_copy_host_ptr_sym()
+{
+    Is_True(_cl_mem_copy_host_ptr_st_idx == ST_IDX_ZERO, (""));
+    _cl_mem_copy_host_ptr_st_idx  = new_extern_var("CL_MEM_COPY_HOST_PTR", MTYPE_To_TY(MTYPE_U4));   
+    set_st_attr_is_cuda_runtime(_cl_mem_copy_host_ptr_st_idx);
+    return _cl_mem_copy_host_ptr_st_idx;
 }
 
 
