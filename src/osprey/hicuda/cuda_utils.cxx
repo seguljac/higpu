@@ -178,8 +178,11 @@ declare_cuda_dim3() {
 
     // Alignment is important!
     Set_TY_align(ty_idx, 4);
-    // Flag it as a CUDA type.
-    Set_TY_is_cuda_runtime(ty_idx);
+    if (flag_opencl){  
+    } else {
+      // Flag it as a CUDA type.
+      Set_TY_is_cuda_runtime(ty_idx);
+    }
 
     /* Set the fields' types. */
     
