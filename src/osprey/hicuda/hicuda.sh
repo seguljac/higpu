@@ -381,9 +381,9 @@ fi
 ###########################################################################
 
 if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
-    OUTPUT_DIR_BASE="${BASE_NAME}.opencl"
+    OUTPUT_DIR_BASE="${BASE_NAME}.higpu_opencl"
 else
-    OUTPUT_DIR_BASE="${BASE_NAME}.cuda"
+    OUTPUT_DIR_BASE="${BASE_NAME}.higpu_cuda"
 fi
 
 # OUTPUT_DIR is a symbolic link to the actual folder named
