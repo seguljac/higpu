@@ -122,7 +122,7 @@ sed "s;##HICUDA_ROOT_STUB##;${HICUDA_ROOT};g" \
 
 # unset-hicuda.sh, unset-hicuda.csh
 cp ${SCRIPT_DIR}/unset-hicuda.sh ${HICUDA_BIN}/unset-higpu.sh
-cp ${SCRIPT_DIR}/unset-hicuda.csh ${HICUDA_BIN}/unset-higpu.sh
+cp ${SCRIPT_DIR}/unset-hicuda.csh ${HICUDA_BIN}/unset-higpu.csh
 
 # hiCUDA compiler driver script
 HICUDA_SRC_DIR="${SRC_DIR}/osprey/hicuda"
