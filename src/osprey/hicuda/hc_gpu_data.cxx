@@ -103,15 +103,14 @@ static WN* HC_make_gvar_transfer_code(HC_GPU_DATA *gdata, BOOL copyin,
         }
         else
         {
-            // We must use the global <cmem> variable here, instead of the
-            // local constant memory pointer variable.
-            ST_IDX cmem_st_idx = hc_glob_var_store.get_cmem_sym();
-            WN *gvar_ofst_wn = WN_Intconst(Integer_type, gvi->get_offset());
-
 	    if (flag_opencl){
 	      // OpenCL not implemented here.
 	      assert(0);
 	    } else {
+	      // We must use the global <cmem> variable here, instead of the
+	      // local constant memory pointer variable.
+	      ST_IDX cmem_st_idx = hc_glob_var_store.get_cmem_sym();
+	      WN *gvar_ofst_wn = WN_Intconst(Integer_type, gvi->get_offset());
 	      // Create a cudaMemcpyToSymbol call.
 	      tcall_wn = call_cudaMemcpyToSymbol(cmem_st_idx, var_wn,
 						 WN_COPY_Tree(gvi->get_size()),
@@ -296,16 +295,22 @@ static WN* HC_make_gvar_transfer_code(HC_GPU_DATA *gdata, BOOL copyin,
     }
     else
     {
-        // We must use the global <cmem> variable here, instead of the
-        // local constant memory pointer variable.
-        ST_IDX cmem_st_idx = hc_glob_var_store.get_cmem_sym();
-        gvar_ofst_wn = WN_Add(Integer_type, gvar_ofst_wn,
-                WN_Intconst(Integer_type, gvi->get_offset()));
-
 	if (flag_opencl){
-	  // OpenCL not implemented here.
-	  assert(0);
+	  tcall_wn = call_clCreateBufferRet(WN_LdaZeroOffset(gvar_st_idx),
+					    WN_LdidScalar(hc_glob_var_store.get_cl_context_sym()),
+					    WN_Bior(MTYPE_U4, 
+						    WN_LdidScalar(hc_glob_var_store.get_cl_mem_read_only_sym()),
+						    WN_LdidScalar(hc_glob_var_store.get_cl_mem_copy_host_ptr_sym())
+						    ),
+					    WN_COPY_Tree(gvi->get_size()),
+					    var_access_wn,
+					    WN_LdidScalar(hc_glob_var_store.get_cl_null_sym()));
 	} else {
+	  // We must use the global <cmem> variable here, instead of the
+	  // local constant memory pointer variable.
+	  ST_IDX cmem_st_idx = hc_glob_var_store.get_cmem_sym();
+	  gvar_ofst_wn = WN_Add(Integer_type, gvar_ofst_wn,
+				WN_Intconst(Integer_type, gvi->get_offset()));
 	  // Create a cudaMemcpyToSymbol call.
 	  tcall_wn = call_cudaMemcpyToSymbol(cmem_st_idx, var_access_wn,
 					     WN_LdidScalar(batsz_st_idx),
@@ -641,9 +646,9 @@ void HC_create_local_cvar(HC_GPU_DATA *gdata)
     } else {
       // It is just a regular variable (no need for a special flag).
       // set_st_attr_is_const_var(cvar_st_idx);
-      // Save it in the GPU variable record.
-      gvi->set_symbol(cvar_st_idx);
     }
+    // Save it in the GPU variable record.
+    gvi->set_symbol(cvar_st_idx);
 }
 
 WN* HC_create_cvar_init_stmt(const HC_GPU_VAR_INFO *gvi)

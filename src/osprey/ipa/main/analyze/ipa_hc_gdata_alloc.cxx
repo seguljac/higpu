@@ -709,10 +709,9 @@ void IPA_HC_alloc_const_mem()
 	  } else {
             // Allocate a global constant memory variable "cmem".
             hc_glob_var_store.create_cmem_sym(n_cmem_elems, max_elem_sz);
-
-            // Save the allocation offset for each constant directive.
-            IPA_HC_set_alloc_offset(TRUE, &ic_solver, max_elem_sz);
 	  }
+	  // Save the allocation offset for each constant directive.
+	  IPA_HC_set_alloc_offset(TRUE, &ic_solver, max_elem_sz);
         }
     }
     MEM_POOL_Pop(&tmp_pool);
