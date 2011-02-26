@@ -148,7 +148,13 @@ static BOOL HC_compare_cuda_types(
     if (ty_kind != TY_kind(ty)) return FALSE;
     if (TY_size(hcst_ty) != TY_size(ty)) return FALSE;
     if (TY_mtype(hcst_ty) != TY_mtype(ty)) return FALSE;
-    if (TY_flags(hcst_ty) != TY_flags(ty)) return FALSE;
+    if (TY_flags(hcst_ty) != TY_flags(ty)){
+      if ((TY_flags(hcst_ty) & 0x7fff) == (TY_flags(ty) & 0x7fff)){
+	// Exclude openCL is_used_in_kernel from comparison
+      } else {
+	return FALSE;
+      }
+    }
 
     // Assume that the two types are identical (and try to prove otherwise).
     BOOL ident = TRUE;
