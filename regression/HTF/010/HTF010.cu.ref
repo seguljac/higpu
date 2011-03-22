@@ -1,0 +1,24 @@
+/*******************************************************
+ * CUDA file generated at Tue Mar 22 12:28:26 2011
+ *******************************************************/
+
+/* Include file-level type and variable decls */
+#include "HTF010.cu.h"
+
+
+int main(
+  int argc,
+  char ** argv)
+{
+  register int __comma;
+  struct atom_t atom;
+  char type[8LL];
+  
+  __comma = strcmp((const char *) & atom, (const char *) type);
+  if(__comma == (int)(0U))
+  {
+    return 1U;
+  }
+  return 0U;
+} /* main */
+

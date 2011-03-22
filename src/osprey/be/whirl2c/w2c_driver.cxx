@@ -1268,7 +1268,7 @@ void W2C_Outfile_Init(BOOL emit_global_decls)
 		       "\tprogram_string = oclLoadProgSource(\"kernels.cl\", header_string, &program_length);\n"
 		       "\t*program = clCreateProgramWithSource(*context, 1, (const char **)&program_string, &program_length, &init_error);\n"
 		       "\tif (init_error != CL_SUCCESS) printf(\"Kernel program FAILED\\n\");\n"
-		       "\tinit_error = clBuildProgram(*program, 0, NULL, \"-w -cl-nv-verbose -cl-nv-opt-level=3\", NULL, NULL);\n"
+		       "\tinit_error = clBuildProgram(*program, 0, NULL, \"-w -cl-mad-enable -cl-nv-verbose -cl-nv-opt-level=3\", NULL, NULL);\n"
 		       "\tinit_error |= clGetProgramBuildInfo(*program, device, CL_PROGRAM_BUILD_LOG, 0, NULL, &build_log_size);\n"
 		       "\tbuild_log = (char*) malloc(build_log_size+1);\n"
 		       "\tinit_error |= clGetProgramBuildInfo(*program, device, CL_PROGRAM_BUILD_LOG, build_log_size, build_log, NULL);\n"
