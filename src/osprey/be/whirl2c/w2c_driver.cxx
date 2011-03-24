@@ -1197,7 +1197,12 @@ void W2C_Outfile_Init(BOOL emit_global_decls)
       Write_String(W2C_File[W2C_CLH_FILE], W2C_File[W2C_LOC_FILE],
 		   " *******************************************************/"
 		   "\n\n");
-      
+
+      /* Include <whirl2c_OpenCL.h> in the kernel header file. */
+      Write_String(W2C_File[W2C_CLH_FILE], W2C_File[W2C_LOC_FILE],
+		   "/*  Include builtin types and operator (OpenCL version) */\n"
+		   "#include <whirl2c_OpenCL.h>\n\n");   
+
       Write_String(W2C_File[W2C_CLH_FILE], W2C_File[W2C_LOC_FILE],
 		   "#define threadIdxX get_local_id(0)\n"
 		   "#define threadIdxY get_local_id(1)\n"

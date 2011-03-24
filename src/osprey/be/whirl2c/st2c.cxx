@@ -710,11 +710,13 @@ ST2C_use_func(TOKEN_BUFFER tokens, const ST *st, CONTEXT context)
 {
    Is_True(ST_sym_class(st)==CLASS_FUNC, ("expected CLASS_FUNC ST"));
    if (W2C_Emit_OpenCL && openCL_in_kernel_code){ 
-     // When cosf, sinf and sqrtf used in kernel, rename to cos, sin and sqrt, respectively.
+     // When cosf, sinf, expf and sqrtf used in kernel, rename to cos, sin, exp and sqrt, respectively.
      if (!strcmp(W2CF_Symtab_Nameof_St(st), "cosf")){
        Append_Token_String(tokens, "cos");
      } else if (!strcmp(W2CF_Symtab_Nameof_St(st), "sinf")){
        Append_Token_String(tokens, "sin");
+     } else if (!strcmp(W2CF_Symtab_Nameof_St(st), "expf")){
+       Append_Token_String(tokens, "exp");
      } else if (!strcmp(W2CF_Symtab_Nameof_St(st), "sqrtf")){
        Append_Token_String(tokens, "sqrt");
      } else {
@@ -838,7 +840,8 @@ ST2C_func_header(TOKEN_BUFFER  tokens,
    BOOL         has_prototype = TY_has_prototype(funtype);
 
    // Recognize that We are in kernel code
-   if (PU_is_kernel(Pu_Table[ST_pu(st)])) {
+   if (PU_is_kernel(Pu_Table[ST_pu(st)]) 
+       ||  PU_is_device(Pu_Table[ST_pu(st)])) {
      openCL_in_kernel_code = 1;
    } else {
      openCL_in_kernel_code = 0;
@@ -923,8 +926,13 @@ ST2C_func_header(TOKEN_BUFFER  tokens,
       TY2C_translate(header_tokens, Func_Return_Type(funtype), context);
    }
    
-   if (PU_is_inline_function(Pu_Table[ST_pu(st)]))
+   if (PU_is_inline_function(Pu_Table[ST_pu(st)])){
+     if (W2C_Emit_OpenCL){ 
+       Prepend_Token_String(header_tokens, "inline");
+     } else {
       Prepend_Token_String(header_tokens, "__inline");
+     }
+   }
    if (ST_sclass(st) == SCLASS_FSTATIC)
       Prepend_Token_String(header_tokens, "static");
 

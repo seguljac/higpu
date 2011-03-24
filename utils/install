@@ -135,6 +135,9 @@ if [[ ! -d "${HICUDA_MISC}" ]]; then
 fi
 cp ${SRC_DIR}/osprey/include/whirl2c.h ${HICUDA_MISC}
 
+# Copy whirl2c_OpenCL.h to the <misc> folder.
+cp ${SRC_DIR}/osprey/include/whirl2c_OpenCL.h ${HICUDA_MISC}
+
 # Copy documentation in 'docs/build-docs' to 'docs'.
 HICUDA_DOCS="${HICUDA_ROOT}/docs"
 if [[ -d "${HICUDA_DOCS}" ]]; then

@@ -412,6 +412,11 @@ fi
 # Copy the common whirl2c.h to the target directory.
 cp ${HICUDA_ROOT}/misc/whirl2c.h ${OUTPUT_DIR}
 
+if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
+    # Copy the common whirl2c_OpenCL.h to the target directory.
+    cp ${HICUDA_ROOT}/misc/whirl2c_OpenCL.h ${OUTPUT_DIR}
+fi
+
 # If OUTPUT_DIR_BASE does not exist or is just a symbolic link, let it point
 # to the the real output directory.
 if [ -h "${OUTPUT_DIR_BASE}" ]; then
