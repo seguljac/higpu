@@ -29,6 +29,8 @@
 #include "ipo_defs.h"
 #include "ipo_lwn_util.h"
 
+#include "ir_reader.h"
+
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
@@ -1854,18 +1856,36 @@ static WN* HC_expand_actuals_for_call(WN *wn, WN *parent_wn,
     WN* new_actuals[n_new_actuals];
     UINT a_idx = 0;
 
-    // Go through the existing actuals.
-    for (UINT i = 0; i < n_actuals; ++i)
+    // Switch to the callee's context.
+    IPA_NODE_CONTEXT context(callee);
+
     {
-        HC_GPU_DATA *gdata = callee_fgva->get_formal_data(i);
-        if (gdata == NULL || gdata->get_type() == HC_GLOBAL_DATA)
-        {
-            // Migrate the original actual.
-            new_actuals[a_idx++] = WN_kid(call_wn,i);
-            WN_kid(call_wn,i) = NULL;   // IMPORTANT!
+      // Switch to the callee's context.
+      IPA_NODE_CONTEXT context(callee);
+      
+      for (UINT i = 0; i < n_actuals; ++i)
+	{
+	  HC_GPU_DATA *gdata = callee_fgva->get_formal_data(i);
+	  if (gdata == NULL || gdata->get_type() == HC_GLOBAL_DATA)
+            {
+	      // Migrate the original actual.
+	      WN *actual_wn = WN_kid(call_wn,i);
+	      Is_True(WN_operator(actual_wn) == OPR_PARM, (""));
+	      WN_kid(call_wn,i) = NULL;   // IMPORTANT!
+	      
+	      // Update the PARM's type accordingly if the formal has been
+	      // replaced with the corresponding GPU variable.
+	      if (gdata != NULL)
+                {
+		  WN_set_ty(actual_wn,
+                            ST_type(gdata->get_gvar_info()->get_symbol()));
+                }
+	      
+	      new_actuals[a_idx++] = actual_wn;
+            }
         }
     }
-
+    
     // Go through each global of the callee.
     GLOBAL_GPU_DATA_ITER gdata_iter(callee_fgva->get_global_data_table());
     ST_IDX st_idx;

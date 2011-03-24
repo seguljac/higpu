@@ -2007,6 +2007,7 @@ static void HC_outline_kernel(IPA_NODE *node, HC_KERNEL_INFO *kinfo)
                 Set_ST_export(st, EXPORT_LOCAL_INTERNAL);
                 break;
 
+            case SCLASS_COMMON:
             case SCLASS_FSTATIC:
             case SCLASS_EXTERN:
             case SCLASS_UGLOBAL:

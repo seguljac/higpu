@@ -6384,7 +6384,14 @@ WN2C_parm(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context) {
     */
    TOKEN_BUFFER parm_tokens;
    STATUS       status;
-   TY_IDX       parm_ty = CONTEXT_given_lvalue_ty(context);
+ 
+   // DAVID COMMENT:
+   //
+   // The original code gets the lvalue type unconditionally, which appears
+   // to be a bug.
+   //
+   TY_IDX       parm_ty = CONTEXT_lvalue_type(context) ?
+       CONTEXT_given_lvalue_ty(context) : TY_IDX_ZERO;
 
    CONTEXT_reset_given_lvalue_ty(context);
 
