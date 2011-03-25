@@ -66,7 +66,8 @@ static char *rcs_id = "$Source: /proj/osprey/CVS/open64/osprey1.0/be/whirl2c/tco
 #include "alloca.h"
 
 extern BOOL W2C_Emit_OpenCL;
-extern int openCL_in_kernel_code;
+extern int openCL_kernel_function;
+extern int openCL_device_function;
 
 /*---------------------- Hidden utilities ---------------------*/
 /*-------------------------------------------------------------*/
@@ -263,7 +264,7 @@ TCON2C_translate(TOKEN_BUFFER tokens, TCON tvalue)
       break;
 
     case MTYPE_I8:
-      if (W2C_Emit_OpenCL && openCL_in_kernel_code){
+      if (W2C_Emit_OpenCL && (openCL_kernel_function || openCL_device_function)){
 	Append_Token_String(tokens, Targ_Print("%1lld", tvalue)); 
       } else {
 	Append_Token_String(tokens, Targ_Print("%1lldLL", tvalue));
@@ -271,7 +272,7 @@ TCON2C_translate(TOKEN_BUFFER tokens, TCON tvalue)
       break;
 
     case MTYPE_U8:
-      if (W2C_Emit_OpenCL && openCL_in_kernel_code){
+      if (W2C_Emit_OpenCL && (openCL_kernel_function || openCL_device_function)){
 	Append_Token_String(tokens, Targ_Print("%1llu", tvalue)); 
       } else {
 	Append_Token_String(tokens, Targ_Print("%1lluULL", tvalue));

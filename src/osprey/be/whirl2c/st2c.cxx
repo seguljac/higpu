@@ -83,7 +83,8 @@ static char *rcs_id = "$Source: /proj/osprey/CVS/open64/osprey1.0/be/whirl2c/st2
 #include "init2c.h"
 
 extern BOOL W2C_Emit_OpenCL;
-extern int openCL_in_kernel_code;
+extern int openCL_kernel_function;
+extern int openCL_device_function;
 
 /*--------- General purpose macros to get ST attributes ---------------*/
 /*---------------------------------------------------------------------*/
@@ -497,7 +498,7 @@ ST2C_basic_decl(TOKEN_BUFFER tokens, const ST *st, CONTEXT context)
     if (ST_sym_class(st) == CLASS_VAR) {
       ST_IDX st_idx = ST_st_idx(st);
       if (W2C_Emit_OpenCL){
-	if (openCL_in_kernel_code){
+	if (openCL_kernel_function || openCL_device_function){
 	  if (st_attr_is_global_var(st_idx)) {
 	    // a variable in global memory
  	    Prepend_Token_String(decl_tokens, "__global"); 
@@ -509,8 +510,15 @@ ST2C_basic_decl(TOKEN_BUFFER tokens, const ST *st, CONTEXT context)
 	    Prepend_Token_String(decl_tokens, "__constant");
 	  }  else {
 	    if (TY_Is_Pointer(ST_type(st))){ 
-	      // Default for OpenCL: all pointers point to global memory 
-	      Prepend_Token_String(decl_tokens, "__global"); 
+              // FIXME
+	      // Default for OpenCL: 
+              // all pointers in kernel point to global memory 
+              // all pointers in device point to private memory
+	      if (openCL_kernel_function){
+		Prepend_Token_String(decl_tokens, "__global"); 
+	      } else {
+	      	Prepend_Token_String(decl_tokens, "__private"); 
+	      }
 	    }
 	  }
 	}
@@ -709,7 +717,7 @@ static void
 ST2C_use_func(TOKEN_BUFFER tokens, const ST *st, CONTEXT context)
 {
    Is_True(ST_sym_class(st)==CLASS_FUNC, ("expected CLASS_FUNC ST"));
-   if (W2C_Emit_OpenCL && openCL_in_kernel_code){ 
+   if (W2C_Emit_OpenCL && (openCL_kernel_function || openCL_device_function)){ 
      // When cosf, sinf, expf and sqrtf used in kernel, rename to cos, sin, exp and sqrt, respectively.
      if (!strcmp(W2CF_Symtab_Nameof_St(st), "cosf")){
        Append_Token_String(tokens, "cos");
@@ -839,14 +847,6 @@ ST2C_func_header(TOKEN_BUFFER  tokens,
    TY_IDX       funtype = ST_pu_type(st);
    BOOL         has_prototype = TY_has_prototype(funtype);
 
-   // Recognize that We are in kernel code
-   if (PU_is_kernel(Pu_Table[ST_pu(st)]) 
-       ||  PU_is_device(Pu_Table[ST_pu(st)])) {
-     openCL_in_kernel_code = 1;
-   } else {
-     openCL_in_kernel_code = 0;
-   }
-   
    Is_True((ST_sclass(st) == SCLASS_TEXT  
      || ST_sclass(st) == SCLASS_EXTERN) && TY_Is_Function(funtype),
      ("Illegal ST_sclass for function"));

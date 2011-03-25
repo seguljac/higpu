@@ -85,7 +85,8 @@ static char *rcs_id = "$Source: /proj/osprey/CVS/open64/osprey1.0/be/whirl2c/wn2
 /*** DAVID CODE END ***/
 
 extern BOOL W2C_Emit_OpenCL;
-extern int openCL_in_kernel_code;
+extern int openCL_kernel_function;
+extern int openCL_device_function;
 extern TOKEN_BUFFER kernel_tokens;
 
 #define WN_pragma_nest(wn) WN_pragma_arg1(wn)
@@ -2657,6 +2658,14 @@ WN2C_Append_Symtab_Vars(TOKEN_BUFFER tokens,
      */
     FOREACH_SYMBOL(CURRENT_SYMTAB, st, sidx)
     {
+
+        if ((ST_class(st) == CLASS_FUNC) &&
+	    PU_is_device(Pu_Table[ST_pu(st)])){
+	  openCL_device_function = 1;
+	} else {
+	  openCL_device_function = 0;
+	}
+
         ST_IDX st_idx = ST_st_idx(st);
 
         // We do not declare symbols from the CUDA runtime because the
@@ -2722,12 +2731,13 @@ WN2C_Append_Symtab_Vars(TOKEN_BUFFER tokens,
 		char str_buf[10000];
 		Str_Write_And_Reclaim_Tokens(str_buf, 10000, &tmp_tokens);
 		// printf(" All Var: %d\n", st_idx);
-		if (ST_class(st) == CLASS_FUNC && PU_is_device(Pu_Table[ST_pu(st)])){
+		if ((ST_class(st) == CLASS_FUNC) && PU_is_device(Pu_Table[ST_pu(st)])){
 		  //  if (st_attr_is_used_in_kernel(st_idx)){
 		  //  printf(" Used Var: %d\n", st_idx);
 		  Write_String(W2C_File[W2C_CLH_FILE], NULL, str_buf);
+		} else {
+		  Write_String(W2C_File[W2C_DOTH_FILE], NULL, str_buf);
 		}
-		Write_String(W2C_File[W2C_DOTH_FILE], NULL, str_buf);
 	      }	
 	    } else{
 	      if (tokens != NULL) {
@@ -3746,10 +3756,20 @@ WN2C_func_entry_original(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context);
 static STATUS
 WN2C_func_entry(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context)
 {
-  if ((W2C_Emit_OpenCL && PU_is_kernel(Pu_Table[ST_pu(WN_st(wn))]))
-      || (W2C_Emit_OpenCL && PU_is_device(Pu_Table[ST_pu(WN_st(wn))]))){
+  if (W2C_Emit_OpenCL && 
+      (PU_is_kernel(Pu_Table[ST_pu(WN_st(wn))]) ||
+       PU_is_device(Pu_Table[ST_pu(WN_st(wn))]))){
+    if (PU_is_kernel(Pu_Table[ST_pu(WN_st(wn))])){
+      openCL_kernel_function = 1;
+      openCL_device_function = 0;
+    } else {
+      openCL_device_function = 1;
+      openCL_kernel_function = 0;
+    }
     return WN2C_func_entry_original(kernel_tokens, wn, context);
   } else {
+    openCL_kernel_function = 0;
+    openCL_device_function = 0;
     return WN2C_func_entry_original(tokens, wn, context);
   }
 }

@@ -89,8 +89,9 @@ static char *rcs_id = "$Source: /proj/osprey/CVS/open64/osprey1.0/be/whirl2c/w2c
 
 // A buffer which holds all the code for kernel source file
 TOKEN_BUFFER kernel_tokens;
-// A flag which determines if we are processing kernel code or not
-int openCL_in_kernel_code;
+// Flags which determines if we are processing kernel or device code or not
+int openCL_kernel_function;
+int openCL_device_function;
 
 /* ====================================================================
  *
