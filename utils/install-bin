@@ -88,8 +88,8 @@ export TOOLROOT="${HICUDA_ROOT}"
 # Clear the installation root.
 rm -rf ${HICUDA_ROOT}
 
-# Copy the entire directory to the installation root.
-cp -r ${BIN_ROOT} ${HICUDA_ROOT}
+# Copy the entire directory to the installation root, preserving links.
+cp -rd ${BIN_ROOT} ${HICUDA_ROOT}
 
 BIN_DIR="${BIN_ROOT}/bin"
 HICUDA_BIN_DIR="${HICUDA_ROOT}/bin"

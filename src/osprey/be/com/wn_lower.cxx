@@ -12613,6 +12613,34 @@ static WN *lower_entry(WN *tree, LOWER_ACTIONS actions)
       WN_kid0(n_tree) = idname;
       for (INT32 i = 0; i < WN_kid_count(tree); i++)
 	WN_kid(n_tree, i+1) = WN_kid(tree, i);
+
+      /** DAVID CODE BEGIN **/
+
+      // Create a new function prototype, with the additional parameter.
+      TY_IDX new_func_ty_idx;
+      TY &new_func_ty = New_TY(new_func_ty_idx);
+      TY &func_ty = Ty_Table[prototype];
+      // Copy over the TY struct.
+      new_func_ty = func_ty;
+      // Create a new TYLIST entry for the void return type.
+      TYLIST_IDX new_tyl_idx;
+      New_TYLIST(new_tyl_idx) = Void_Type;
+      Set_TY_tylist(new_func_ty, new_tyl_idx);
+      // Add the first parameter's type.
+      New_TYLIST(new_tyl_idx) = ST_type(return_st);
+      // Copy over the remaining parameters' types.
+      TYLIST_IDX tyl_idx = TY_tylist(func_ty);
+      TY_IDX param_ty_idx;
+      do
+          {
+              param_ty_idx = Tylist_Table[++tyl_idx];
+              New_TYLIST(new_tyl_idx) = param_ty_idx;
+          } while (param_ty_idx != TY_IDX_ZERO);
+      // Update the PU struct.
+      Set_PU_prototype(Pu_Table[puidx], new_func_ty_idx);
+
+      /*** DAVID CODE END ***/
+
       // fix pu pointer from RID
       if (RID_map != WN_MAP_UNDEFINED) {
         RID *rid = (RID *)WN_MAP_Get(RID_map, tree);

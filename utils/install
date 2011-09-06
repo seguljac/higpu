@@ -109,6 +109,8 @@ fi
 # Copy various scripts to the <bin> folder.
 HICUDA_BIN="${HICUDA_ROOT}/bin"
 
+# Install utilities.
+cp ${SCRIPT_DIR}/extr_stdc_hdrs ${HICUDA_BIN}
 # rmpath.sh, rmpath.csh
 cp ${SCRIPT_DIR}/rmpath.sh ${HICUDA_BIN}
 cp ${SCRIPT_DIR}/rmpath.csh ${HICUDA_BIN}

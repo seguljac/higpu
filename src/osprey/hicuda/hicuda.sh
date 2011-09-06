@@ -2,8 +2,6 @@
 #
 # Driver script for the hicuda compiler.
 #
-# Last updated: 09/11/07
-#
 
 # Make sure that we have HICUDA_ROOT set.
 if [ ! -d "${HICUDA_ROOT}" ]; then
@@ -151,50 +149,131 @@ export PATH="${HICUDA_ROOT}/bin:${PATH}";
 #
 ###########################################################################
 
-# Extract all standard includes from the source files.
+#
+# Get a list of standard include paths for GCC installed on the local system.
+#
+STD_INC_DIRS=()
 TMP_FILE=`mktemp`
-awk '{if (($1 ~ /^#include$/) && ($2 ~ /^<.*\.h>/)) {print $1 " " $2}}' \
-        ${INPUT_FILES} > ${TMP_FILE}
-# Remove any ^M and ^Z characters just in case this source comes from Windows.
-sed -i 's/'"$(printf '\015')"'$//' ${TMP_FILE}
-sed -i 's/'"$(printf '\032')"'$//' ${TMP_FILE}
+which cpp > /dev/null
+if [ $? -eq 0 ]; then
+    cpp -v < /dev/null >& ${TMP_FILE}
+fi
+INC_START=0
+while read LINE
+do
+    if [ ${INC_START} -eq 0 ]; then
+        if [ "${LINE:0:8}" == "#include" ]; then
+            INC_START=1
+        fi
+    else
+        if [ "${LINE:0:3}" == "End" ]; then
+            INC_START=0
+        fi
+    fi
 
-# Add two that we always want to include because they are in whirl2c.h.
-echo "#include <math.h>" >> ${TMP_FILE}
-echo "#include <string.h>" >> ${TMP_FILE}
-
-# Remove duplicates from the include list.
-BASE_INC_NAME="${BASE_NAME}_$$"
-TMP_INC_FILE="/tmp/${BASE_INC_NAME}.c"
-awk '{\
-    if (!($0 in stored_lines)) {\
-        print;\
-        stored_lines[$0] = 1;\
-    }}' ${TMP_FILE} > ${TMP_INC_FILE}
+    if [ ${INC_START} -eq 1 ]; then
+        if [ "${LINE:0:1}" == "/" ]; then
+            STD_INC_DIRS=( "${STD_INC_DIRS[@]}" "${LINE}" )
+        fi
+    fi
+done < ${TMP_FILE}
 rm ${TMP_FILE}
 
+#
+# Add these standard include paths to the opencc command-line so that the
+# custom C preprocessor included in the hiCUDA compiler behaves the same way
+# as the local C preprocessor.
+#
+OPENCC_INC_DIRS="${INC_DIRS}"
+for INC_DIR in "${STD_INC_DIRS[@]}"; do
+    OPENCC_INC_DIRS="${OPENCC_INC_DIRS} -I${INC_DIR}"
+done
+
+#
+# Extract all standard C headers from the source files.
+#
+# First, do C-preprocessing on each source file and collect all header file
+# paths included in the preprocessed files.
+#
+TMP_FILE=`mktemp`
+{
+opencc -E ${OPENCC_INC_DIRS} ${INPUT_FILES} | awk '/^#/{printf("%s\n", $3);}'
+} > ${TMP_FILE}
+TMP_FILE_2=`mktemp`
+for INC_DIR in "${STD_INC_DIRS[@]}"; do
+    grep "\"${INC_DIR}" ${TMP_FILE} >> ${TMP_FILE_2}
+done
+rm ${TMP_FILE}
+# more ${TMP_FILE_2}
+#
+# Second, collect all standard C headers that appear in the paths and store
+# them in a C file.
+#
+# Exclude math.h and string.h from STD_C_HEADERS because they are in
+# whirl2c.h.
+#
+STD_C_HEADERS=(
+    assert.h
+    complex.h
+    ctype.h
+    errno.h
+    fenv.h
+    float.h
+    inttypes.h
+    limits.h
+#   math.h
+    locale.h
+    setjump.h
+    signal.h
+    stdarg.h
+    stdbool.h
+    stdint.h
+    stddef.h
+    stdio.h
+    stdlib.h
+#   string.h
+    tgmath.h
+    time.h
+# The following are not ISO C headers.
+    unistd.h
+    sys/time.h
+)
+# Construct a meaningful name for this C file as we often need to inspect it.
+BASE_INC_NAME="${BASE_NAME}_$$"
+TMP_INC_FILE="/tmp/${BASE_INC_NAME}.c"
+{
+for STD_C_HEADER in "${STD_C_HEADERS[@]}"; do
+    grep "${STD_C_HEADER}" ${TMP_FILE_2} > /dev/null
+    if [[ $? -eq 0 ]]; then
+        echo "#include <${STD_C_HEADER}>"
+    fi
+done
+# Add two that we always want to include because they are in whirl2c.h.
+echo "#include <math.h>"
+echo "#include <string.h>"
+} > ${TMP_INC_FILE}
+rm ${TMP_FILE_2}
+
+#
 # Compile the include list file into WHIRL using opencc in the installation
 # directory of the hiCUDA compiler.
-OPENCC_FLAGS="-D_BSD_SOURCE -std=c99 -D_POSIX_C_SOURCE=200112L -fe -keep -keep-all-types -gnu3"
+#
+# OPENCC_ABI_FLAG is used later.
+#
 if [ ${OPT_ABI_32} -eq 1 ]; then
-    OPENCC_FLAGS="-m32 ${OPENCC_FLAGS}"
+    OPENCC_ABI_FLAG="-m32"
 else
-    OPENCC_FLAGS="-m64 ${OPENCC_FLAGS}"
+    OPENCC_ABI_FLAG="-m64"
 fi
-if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
-    OPENCC_FLAGS="-opencl ${OPENCC_FLAGS}"
+OPENCC_FLAGS="${OPENCC_ABI_FLAG} -fe -hicuda -keep -keep-all-types -gnu3"
+if [[ ${OPT_VERBOSE} -eq 1 ]]; then
+    echo "opencc ${OPENCC_INC_DIRS} ${OPENCC_FLAGS} ${TMP_INC_FILE}"
 fi
-
-# These are the two files to be produced.
+opencc ${OPENCC_INC_DIRS} ${OPENCC_FLAGS} ${TMP_INC_FILE}
+EXIT_CODE=$?
+# Two files are produced.
 TMP_INC_B="${BASE_INC_NAME}.B"
 TMP_INC_I="${BASE_INC_NAME}.i"
-
-if [[ ${OPT_VERBOSE} -eq 1 ]]; then
-    echo "opencc ${INC_DIRS} ${OPENCC_FLAGS} ${TMP_INC_FILE}"
-fi
-opencc ${INC_DIRS} ${OPENCC_FLAGS} ${TMP_INC_FILE}
-EXIT_CODE=$?
-
 # Immediately remove the files that are not needed anymore.
 rm -f ${TMP_INC_I}
 
@@ -229,45 +308,10 @@ OPENCC_FLAGS="${OPENCC_FLAGS} -o ${BASE_NAME}"
 if [ ${OPT_VERBOSE} -eq 1 ]; then
     OPENCC_FLAGS="${OPENCC_FLAGS} -show -vhc"
 fi
-if [ ${OPT_ABI_32} -eq 1 ]; then
-    OPENCC_FLAGS="-m32 ${OPENCC_FLAGS}"
-else
-    OPENCC_FLAGS="-m64 ${OPENCC_FLAGS}"
-fi
+OPENCC_FLAGS="${OPENCC_ABI_FLAG} ${OPENCC_FLAGS}"
 if [ ${OPT_EMIT_OPENCL} -eq 1 ]; then
     OPENCC_FLAGS="-opencl ${OPENCC_FLAGS}"
 fi
-
-# Incorporate the standard include paths for GCC on the local system.
-# This allows the custom C preprocessor included in the hiCUDA compiler to
-# behave the same way as the local C preprocessor (if any).
-#
-OPENCC_INC_DIRS="${INC_DIRS}"
-TMP_FILE=`mktemp`
-which cpp > /dev/null
-if [ $? -eq 0 ]; then
-    cpp -v < /dev/null >& ${TMP_FILE}
-fi
-INC_START=0
-while read LINE
-do
-    if [ ${INC_START} -eq 0 ]; then
-        if [ "${LINE:0:8}" == "#include" ]; then
-            INC_START=1
-        fi
-    else
-        if [ "${LINE:0:3}" == "End" ]; then
-            INC_START=0
-        fi
-    fi
-
-    if [ ${INC_START} -eq 1 ]; then
-        if [ "${LINE:0:1}" == "/" ]; then
-            OPENCC_INC_DIRS="${OPENCC_INC_DIRS} -I${LINE}"
-        fi
-    fi
-done < ${TMP_FILE}
-rm ${TMP_FILE}
 
 if [[ ${OPT_VERBOSE} -eq 1 ]]; then
     echo "opencc ${OPENCC_INC_DIRS} ${OPENCC_FLAGS} ${INPUT_FILES}"

@@ -4,8 +4,6 @@
 #
 # The script does not take any parameters.
 #
-# Last updated: 10/05/25
-#
 
 # internal flags
 DEBUG=1             # debugged version of hiCUDA compiler
@@ -89,6 +87,12 @@ if [[ ! `type -p csh` && ! `type -p tcsh` ]]; then
     echo
     exit 1
 fi
+
+##########################################################################
+# Build utilities.
+##########################################################################
+
+make -C ${SCRIPT_DIR}
 
 ##########################################################################
 # Build the hiCUDA compiler.
