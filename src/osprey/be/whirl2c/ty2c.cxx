@@ -506,11 +506,12 @@ TY2C_prototype_params(TOKEN_BUFFER decl_tokens,
 	 param_tokens = New_Token_Buffer();
 	 TY2C_translate(param_tokens, TYLIST_item(Tylist_Table[params]),
                         context);
-	 if (W2C_Emit_OpenCL && openCL_device_function){
+	 /*if (W2C_Emit_OpenCL && openCL_device_function){
 	   if (TY_Is_Pointer(TYLIST_item(Tylist_Table[params]))){
 	     Prepend_Token_String(param_tokens, "__private");
+	     printf("%d\n", openCL_device_function_info);
 	   }
-	 }
+	   }*/
 	 Append_And_Reclaim_Token_List(decl_tokens, &param_tokens);
 	 params = TYLIST_next(params);
          if (Tylist_Table[params] != 0)

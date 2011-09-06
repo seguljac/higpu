@@ -487,6 +487,17 @@ ST2C_formal_ref_decl(TOKEN_BUFFER tokens, const ST *st, CONTEXT context)
 static void
 ST2C_basic_decl(TOKEN_BUFFER tokens, const ST *st, CONTEXT context)
 {
+ 
+    // Do not declare device functions here, we do that when we define them 
+    // in WN2C_func_entry
+    if (W2C_Emit_OpenCL){   
+      if (ST_sym_class(st) == CLASS_FUNC
+	  && PU_is_device(Pu_Table[ST_pu(st)])) {
+	// device function declaration
+	return;
+      }
+    }
+	  
     TOKEN_BUFFER decl_tokens = New_Token_Buffer();
 
     Append_Token_String(decl_tokens, W2CF_Symtab_Nameof_St(st)); /* name */

@@ -2576,7 +2576,7 @@ static void WN2C_Append_Symtab_Types(TOKEN_BUFFER tokens,
 	    Str_Write_And_Reclaim_Tokens(str_buf, 10000, &tmp_tokens);
 	    // printf(" All Type: %d\n", ty_idx);
 	    if (TY_is_used_in_kernel(ty)){
-	      // printf(" Used Type in kernel : %d\n", ty_idx);
+	      //printf(" Used Type in kernel : %d\n", ty_idx);
 	      // Write it to the kernel header file
 	      Write_String(W2C_File[W2C_CLH_FILE], NULL, str_buf);
 	    }
@@ -2722,7 +2722,7 @@ WN2C_Append_Symtab_Vars(TOKEN_BUFFER tokens,
 
             Append_Indented_Newline(tmp_tokens, lines_between_decls);
 
-	    // Write definition of functions that are used in kernel code
+	    // DO NOT Write definition of functions that are used in kernel code
 	    // to the kernel header file	    
 	    if (W2C_Emit_OpenCL){
 	      if (tokens != NULL) {
@@ -2733,8 +2733,9 @@ WN2C_Append_Symtab_Vars(TOKEN_BUFFER tokens,
 		// printf(" All Var: %d\n", st_idx);
 		if ((ST_class(st) == CLASS_FUNC) && PU_is_device(Pu_Table[ST_pu(st)])){
 		  //  if (st_attr_is_used_in_kernel(st_idx)){
-		  //  printf(" Used Var: %d\n", st_idx);
-		  Write_String(W2C_File[W2C_CLH_FILE], NULL, str_buf);
+		  //printf(" Used Var: %d\n", st_idx);
+		  // printf("AHA %s\n", str_buf);
+		  //Write_String(W2C_File[W2C_CLH_FILE], NULL, str_buf);
 		} else {
 		  Write_String(W2C_File[W2C_DOTH_FILE], NULL, str_buf);
 		}
@@ -3836,7 +3837,23 @@ WN2C_func_entry_original(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context)
    /* Write function header, and begin the body on a new line */
    CONTEXT_set_srcpos(context, WN_Get_Linenum(wn));
    WN2C_Stmt_Newline(tokens, CONTEXT_srcpos(context));
-   ST2C_func_header(tokens, WN_st(wn), param_st, context);
+
+   TOKEN_BUFFER tmp_tokens = New_Token_Buffer();
+   ST2C_func_header(tmp_tokens, WN_st(wn), param_st, context);
+   Append_And_Copy_Token_List(tokens, tmp_tokens);
+
+   // CEDOMIR
+   if (openCL_device_function){
+     char str_buf[10000];
+     Str_Write_And_Reclaim_Tokens(str_buf, 10000, &tmp_tokens);
+     int length = strlen(str_buf);
+     str_buf[length-1] = ';';
+     str_buf[length+0] = '\n';
+     str_buf[length+1] = '\n';
+     str_buf[length+2] = 0;
+     Write_String(W2C_File[W2C_CLH_FILE], NULL, str_buf);
+     //printf("%s\n", str_buf);    
+   }
    
    /* Write out the function body */
    CONTEXT_set_srcpos(context, WN_Get_Linenum(WN_func_body(wn)));

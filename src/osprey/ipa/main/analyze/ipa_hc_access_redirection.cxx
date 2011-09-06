@@ -1296,6 +1296,114 @@ static WN* HC_replace_array_access_walker(WN *wn,
         }
     }
 
+    // CEDOMIR
+    // Handle function calls parameters
+    if (OPERATOR_is_call(opr)){
+      IPA_EDGE *e = node->get_wn_to_edge_map()->Find(wn);
+
+      if (e != NULL){  
+
+	WN *call_wn = e->Whirl_Node();
+	//printf("Call\n");
+	//dump_tree(call_wn);
+	
+	// Sanity check: the callee must be an IK-procedure.
+	IPA_NODE *callee = IPA_Call_Graph->Callee(e);
+	Is_True(callee->may_be_inside_kernel(), ("")); 
+	IPA_NODE_CONTEXT context(callee);
+	WN *callee_wn = callee->Whirl_Tree();
+	//printf("Callee\n");
+	//dump_tree(callee_wn);  
+	IPA_NODE_CONTEXT context2(node);
+	
+	UINT n_actuals = WN_kid_count(call_wn);
+	for (UINT i = 0; i < n_actuals; ++i){
+	  WN *actual_p_wn = WN_kid(call_wn,i);
+	  //printf("ACTUAL PARENT\n");
+	  //dump_tree(actual_p_wn);
+	  
+	  WN *actual_wn = WN_kid(actual_p_wn, 0);
+	  //printf("ACTUAL\n");
+	  //dump_tree(actual_wn);
+	  
+	  IPA_NODE_CONTEXT context(callee);
+	  WN *formal_wn = WN_formal(callee_wn,i);
+	  //printf("FORMAL\n");
+	  //dump_tree(formal_wn);
+	  IPA_NODE_CONTEXT context2(node);
+	  
+	  ST_IDX st_idx = WN_st_idx(actual_wn);
+	  if (st_idx != NULL){
+	    if (st_attr_is_shared_var(st_idx)){
+	      IPA_NODE_CONTEXT context(callee);
+	      set_st_attr_is_shared_var(WN_st_idx(formal_wn));
+	      IPA_NODE_CONTEXT context2(node);
+	      //printf("SHARED\n");
+	    } else if (st_attr_is_const_var(st_idx)){
+	      IPA_NODE_CONTEXT context(callee);
+	      set_st_attr_is_const_var(WN_st_idx(formal_wn));
+	      IPA_NODE_CONTEXT context2(node);
+	      //printf("CONSTANT\n");
+	    } else if (st_attr_is_global_var(st_idx)){
+	      IPA_NODE_CONTEXT context(callee);
+	      set_st_attr_is_global_var(WN_st_idx(formal_wn));
+	      IPA_NODE_CONTEXT context2(node);
+	      //printf("GLOBAL\n");
+	    } else {
+	      //printf("PRIVATE\n");
+	    }
+
+	    OPERATOR actual_opr = WN_operator(actual_wn);
+	    if (actual_opr == OPR_LDID || actual_opr == OPR_STID || actual_opr == OPR_LDA){
+	      ST_IDX st_idx = WN_st_idx(actual_wn);
+	      if (HCST_is_array(st_idx)){
+		// First, search the SHARED data stack.
+		HC_GPU_DATA *gdata = sdata_stack->peek(st_idx);
+		if (gdata == NULL){
+		  // Second, search the kernel DAS.
+		  // Use the ILOAD/ISTORE node to probe, not ARRAY node.
+		  gdata = kinfo->find_gdata_for_arr_region(st_idx);
+		} 
+		if (gdata != NULL){
+		  Is_True(gdata->is_arr_section(), (""));
+		  WN *new_actual_wn = HC_create_gvar_access_for_scalar(actual_wn, gdata);
+
+		  //printf("CHANGING ACTUAL\n");
+		  //printf("BEFORE\n");
+		  //dump_tree(actual_wn);
+		  //printf("AFTER\n");
+		  //dump_tree(new_actual_wn);
+
+		  WN_DELETE_Tree(actual_wn);
+		  WN_kid(actual_p_wn,0) = new_actual_wn;
+		}
+	      }
+	    }
+	  } else {
+	    // TO DO: General expressions in function call parameters
+	  }
+	}
+      }     
+    }
+    
+    // if (opr == OPR_LDID || opr == OPR_STID || opr == OPR_LDA){
+    //   ST_IDX st_idx = WN_st_idx(wn);
+    //   if (HCST_is_array(st_idx)){
+    // 	// First, search the SHARED data stack.
+    // 	HC_GPU_DATA *gdata = sdata_stack->peek(st_idx);
+    // 	if (gdata == NULL){
+    // 	  // Second, search the kernel DAS.
+    // 	  // Use the ILOAD/ISTORE node to probe, not ARRAY node.
+    // 	  gdata = kinfo->find_gdata_for_arr_region(st_idx);
+    // 	} 
+    // 	if (gdata != NULL){
+    // 	  Is_True(gdata->is_arr_section(), (""));
+    // 	  WN *new_wn = HC_create_gvar_access_for_scalar(wn, gdata);
+    // 	  return new_wn;
+    // 	}
+    //   }
+    // }
+
     return NULL;
 }
 
@@ -1716,6 +1824,14 @@ void IPA_HC_GPU_VAR_PROP_DF::expand_formals(IPA_NODE *node)
         {
             new_formals[f++] = gdata->get_gvar_info()->get_symbol();
         }
+	//CEDOMIR
+	if (st_attr_is_shared_var(WN_st_idx(WN_formal(func_wn,i)))){
+	  set_st_attr_is_shared_var(new_formals[f-1]);
+	} else if (st_attr_is_const_var(WN_st_idx(WN_formal(func_wn,i)))){
+	  set_st_attr_is_const_var(new_formals[f-1]);
+	} else if (st_attr_is_global_var(WN_st_idx(WN_formal(func_wn,i)))){
+	  set_st_attr_is_global_var(new_formals[f-1]);
+	}
     }
 
     // Go through the list of globals. Not all of them will be included in the
@@ -1736,7 +1852,7 @@ void IPA_HC_GPU_VAR_PROP_DF::expand_formals(IPA_NODE *node)
     HC_GPU_DATA *sdata;
     while (stbl_iter.Step(&gdata, &sdata))
     {
-        new_formals[f++] = sdata->get_gvar_info()->get_symbol();
+      new_formals[f++] = sdata->get_gvar_info()->get_symbol();
     }
 
     // Go through the list of index variables.
@@ -2071,7 +2187,7 @@ static WN* HC_expand_actuals_walker(WN *wn, WN *parent_wn, IPA_NODE *node,
     // arguments may be calls too.
     if (OPERATOR_is_call(opr))
     {
-        IPA_EDGE *e = node->get_wn_to_edge_map()->Find(wn);
+      IPA_EDGE *e = node->get_wn_to_edge_map()->Find(wn);
         if (e != NULL)
         {
             next_wn = HC_expand_actuals_for_call(wn, parent_wn, e,
