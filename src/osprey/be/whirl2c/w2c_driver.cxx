@@ -1236,10 +1236,11 @@ void W2C_Outfile_Init(BOOL emit_global_decls)
         fclose(inc_fp);
 
 	if (W2C_Emit_OpenCL){
-	  /* Include <oclUtils.h> in the header file. */
+	  /* Include <CL/cl.h> in the header file. */
 	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
 		       "/* Include openCL runtime library headers */\n"
-		       "#include <oclUtils.h>\n\n");
+		       "#include <CL/cl.h>\n"
+               "#include <string.h>\n\n");
 	}
 	else {
 	  /* Include <cuda_runtime.h> in the header file. */
@@ -1250,28 +1251,82 @@ void W2C_Outfile_Init(BOOL emit_global_decls)
 	
 	
 	if (W2C_Emit_OpenCL){
+      /* Output clLoadProgSource function in the header file */
+      Write_String(W2C_File[W2C_DOTH_FILE], NULL,
+                   "/* Output clLoadProgSource function */\n"
+                   "char* clLoadProgSource(\n"
+                   "\tconst char* cFilename,\n"
+                   "\tconst char* cPreamble, \n"
+                   "\tsize_t* szFinalLength) {\n"
+                   "\tFILE* pFileStream = NULL;\n"
+                   "\tsize_t szSourceLength;\n"
+                   "\t// open the OpenCL source code file\n"
+                   "#ifdef _WIN32   // Windows version\n"
+                   "\tif(fopen_s(&pFileStream, cFilename, \"rb\") != 0) {\n"
+                   "\t\treturn NULL;\n"
+                   "}\n"
+                   "#else           // Linux version\n"
+                   "\tpFileStream = fopen(cFilename, \"rb\");\n"
+                   "\tif(pFileStream == 0) {\n"
+                   "\t\treturn NULL;\n"
+                   "\t}\n"
+                   "#endif\n"
+                   "\tsize_t szPreambleLength = strlen(cPreamble);\n"
+                   "\t// get the length of the source code\n"
+                   "\tfseek(pFileStream, 0, SEEK_END);\n"
+                   "\tszSourceLength = ftell(pFileStream);\n"
+                   "\tfseek(pFileStream, 0, SEEK_SET);\n"
+                   "\t// allocate a buffer for the source code string and read it in\n"
+                   "\tchar* cSourceString = (char *)malloc(szSourceLength + szPreambleLength + 1);\n"
+                   "\tmemcpy(cSourceString, cPreamble, szPreambleLength);\n"
+                   "\tif (fread((cSourceString) + szPreambleLength, szSourceLength, 1, pFileStream) != 1) {\n"
+                   "\t\tfclose(pFileStream);\n"
+                   "\t\tfree(cSourceString);\n"
+                   "\t\treturn 0;\n"
+                   "\t}\n"
+                   "\t// close the file and return the total length of the combined (preamble + source) string\n"
+                   "\tfclose(pFileStream);\n"
+                   "\tif(szFinalLength != 0) {\n"
+                   "\t\t*szFinalLength = szSourceLength + szPreambleLength;\n"
+                   "\t}\n"
+                   "\tcSourceString[szSourceLength + szPreambleLength] = '\\0';\n"
+                   "\treturn cSourceString;\n"
+                   "}\n\n");
+
 	  /* Output clInit function in the header file. */
 	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
 		       "/* Output clInit function */\n"
-		       "static int clInit(cl_context *context,\n"
-		       "\t\tcl_command_queue *queue,\n"
-		       "\t\tcl_program *program){\n"
+		       "static int clInit(\n"
+               "\tcl_context *context,\n"
+		       "\tcl_command_queue *queue,\n"
+		       "\tcl_program *program){\n"
 		       "\tcl_platform_id platform;\n"
-		       "\tcl_device_id device;\n"   
-		       "\tchar* program_string;\n"   
+		       "\tcl_device_id device;\n"
+		       "\tchar* program_string;\n"
 		       "\tchar* header_string;\n"       
 		       "\tsize_t program_length;\n"	 
 		       "\tchar *build_log;\n"
 		       "\tsize_t build_log_size;\n"
 		       "\tcl_int init_error;\n\n"      
 		       "\tinit_error = clGetPlatformIDs(1, &platform, NULL);\n"
+               "\tcl_uint num_devices;\n"
+               "\tcl_device_id *devices = (cl_device_id *) malloc(sizeof(cl_device_id));\n"
+               "\tinit_error |= clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 2, devices, &num_devices);\n"
+               "\tif (num_devices > 1) {\n"
+               "\t\tdevice=devices[1];\n"
+               "\t} else {\n"
+               "\t\tdevice = devices[0];\n"
+               "\t}\n"
+               "\tchar deviceName[1024];\n"
+               "\tclGetDeviceInfo(device, CL_DEVICE_NAME, sizeof(deviceName), deviceName, NULL);\n"
+               "\tprintf(\"GPU: %s\\n\", deviceName);\n"
 		       "\tinit_error |= clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &device, NULL);\n"  
 		       "\t*context = clCreateContext(0, 1, &device, NULL, NULL, &init_error);\n"
 		       "\tif (init_error != CL_SUCCESS) printf(\"Platform and context FAILED\\n\");\n\n"
 		       "\t*queue = clCreateCommandQueue(*context, device, 0, &init_error);\n"  
 		       "\tif (init_error != CL_SUCCESS) printf(\"Command queue FAILED\\n\");\n\n"
-		       "\theader_string = oclLoadProgSource(\"kernels.cl.h\", \"\", NULL);\n"
-		       "\tprogram_string = oclLoadProgSource(\"kernels.cl\", header_string, &program_length);\n"
+		       "\theader_string = clLoadProgSource(\"kernels.cl.h\", \"\", NULL);\n"
+		       "\tprogram_string = clLoadProgSource(\"kernels.cl\", header_string, &program_length);\n"
 		       "\t*program = clCreateProgramWithSource(*context, 1, (const char **)&program_string, &program_length, &init_error);\n"
 		       "\tif (init_error != CL_SUCCESS) printf(\"Kernel program FAILED\\n\");\n"
 		       "\tinit_error = clBuildProgram(*program, 0, NULL, \"-w -cl-mad-enable -cl-nv-verbose -cl-nv-opt-level=3\", NULL, NULL);\n"
@@ -1299,15 +1354,16 @@ void W2C_Outfile_Init(BOOL emit_global_decls)
 
 	  /* Output clEnqueueWriteCleanBuffer function in the header file. */
 	  Write_String(W2C_File[W2C_DOTH_FILE], NULL,
-		       "void clEnqueueWriteCleanBuffer (cl_command_queue command_queue,\n"
-		       "\t\tcl_mem buffer,\n"
-		       "\t\tcl_bool blocking_write,\n"
-		       "\t\tsize_t offset,\n"
-		       "\t\tsize_t cb,\n"
-		       "\t\tvoid *ptr,\n"
-		       "\t\tcl_uint num_events_in_wait_list,\n"
-		       "\t\tconst cl_event *event_wait_list,\n"
-		       "\t\tcl_event *event){\n"
+		       "void clEnqueueWriteCleanBuffer (\n"
+               "\tcl_command_queue command_queue,\n"
+		       "\tcl_mem buffer,\n"
+		       "\tcl_bool blocking_write,\n"
+		       "\tsize_t offset,\n"
+		       "\tsize_t cb,\n"
+		       "\tvoid *ptr,\n"
+		       "\tcl_uint num_events_in_wait_list,\n"
+		       "\tconst cl_event *event_wait_list,\n"
+		       "\tcl_event *event) {\n"
 		       "\tmemset(ptr, 0, cb);\n"
 		       "\tclEnqueueWriteBuffer(command_queue, buffer, blocking_write, offset, cb, ptr, num_events_in_wait_list, event_wait_list, event);\n"
 		       "}\n\n");

@@ -3847,10 +3847,11 @@ WN2C_func_entry_original(TOKEN_BUFFER tokens, const WN *wn, CONTEXT context)
      char str_buf[10000];
      Str_Write_And_Reclaim_Tokens(str_buf, 10000, &tmp_tokens);
      int length = strlen(str_buf);
-     str_buf[length-1] = ';';
-     str_buf[length+0] = '\n';
+     str_buf[length-1] = ')';
+     str_buf[length+0] = ';';
      str_buf[length+1] = '\n';
-     str_buf[length+2] = 0;
+     str_buf[length+2] = '\n';
+     str_buf[length+3] = 0;
      Write_String(W2C_File[W2C_CLH_FILE], NULL, str_buf);
      //printf("%s\n", str_buf);    
    }
